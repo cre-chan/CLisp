@@ -1,11 +1,11 @@
-#include <utility>
+#include <stdafx.h>
+#include <lexer.h>
 
 //
 // Created by cre-chan on 19-11-15.
 //
 
-#include <lexer.h>
-#include <exception>
+
 
 
 using TokenType=Token::TokenType;

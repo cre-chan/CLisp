@@ -1,10 +1,3 @@
-#include <utility>
-#include <string>
-#include <variant>
-#include <iostream>
-#include <iterator>
-#include <exception>
-
 //
 // Created by cre-chan on 19-11-15.
 //
@@ -12,7 +5,7 @@
 #ifndef CLISP_LEXER_H
 #define CLISP_LEXER_H
 
-
+//#include <stdafx.h>
 
 using namespace std;
 

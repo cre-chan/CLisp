@@ -2,7 +2,7 @@
 // Created by cre-chan on 19-11-15.
 //
 
-#include <iostream>
+#include <stdafx.h>
 #include <lexer.h>
 
 int main() {
@@ -14,7 +14,7 @@ int main() {
             std::cout<<input<<" ";
         if (input.getTag()==Token::TokenType::nextline) cout<<input<<">>>";
         if (input.getTag()==Token::TokenType ::eof) break;
-    }while(1);
+    }while(true);
 
     return 0;
 }
