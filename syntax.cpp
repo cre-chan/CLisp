@@ -38,6 +38,21 @@ Expr::expr_type Expr::getTag() const {
                 case op_type::div:
                     return div;
             }
+        case 10:
+            return def_with_expr;
+        case 11:
+            switch (std::get<binary_relation>(content).tag){
+                case binary_relation::rel_type ::eq:
+                    return eq;
+                case binary_relation::rel_type ::le:
+                    return le;
+                case binary_relation::rel_type ::lt:
+                    return lt;
+                case binary_relation::rel_type ::ge:
+                    return ge;
+                case binary_relation::rel_type ::gt:
+                    return gt;
+            }
         default:
             throw exception();//这种情况出现了我也不知道怎么办，就让它证明失败好了
     }
@@ -82,6 +97,26 @@ Expr::Expr(Expr::expr_type t, unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
         case conj:
             content.emplace<and_expr>(and_expr{std::move(expr1), std::move(expr2)});
             break;
+        case eq:
+            content.emplace<binary_relation>(
+                    binary_relation{binary_relation::rel_type::eq, std::move(expr1), std::move(expr2)});
+            break;
+        case le:
+            content.emplace<binary_relation>(
+                    binary_relation{binary_relation::rel_type::le, std::move(expr1), std::move(expr2)});
+            break;
+        case lt:
+            content.emplace<binary_relation>(
+                    binary_relation{binary_relation::rel_type::lt, std::move(expr1), std::move(expr2)});
+            break;
+        case ge:
+            content.emplace<binary_relation>(
+                    binary_relation{binary_relation::rel_type::ge, std::move(expr1), std::move(expr2)});
+            break;
+        case gt:
+            content.emplace<binary_relation>(
+                    binary_relation{binary_relation::rel_type::gt, std::move(expr1), std::move(expr2)});
+            break;
         default:
             throw exception();
     }
@@ -96,6 +131,35 @@ Expr::Expr(Expr::expr_type t, unique_ptr<Expr> expr1, unique_ptr<Expr> expr2, un
 Expr::Expr(Expr::expr_type t, Expr::define_expr definePart, unique_ptr<Expr> expr) :
         content(define_with_expr{std::move(definePart), std::move(expr)}) {
 
+}
+
+
+
+
+
+
+
+/*
+ * 快速构建包裹在unique_ptr里的表达式类型
+ * */
+unique_ptr<Expr> Expr::EqExpr(unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
+    return unique_ptr<Expr>(new Expr(expr_type::eq,std::move(expr1),std::move(expr2)));
+}
+
+unique_ptr<Expr> Expr::LeExpr(unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
+    return unique_ptr<Expr>(new Expr(expr_type::le,std::move(expr1),std::move(expr2)));
+}
+
+unique_ptr<Expr> Expr::LtExpr(unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
+    return unique_ptr<Expr>(new Expr(expr_type::lt,std::move(expr1),std::move(expr2)));
+}
+
+unique_ptr<Expr> Expr::GeExpr(unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
+    return unique_ptr<Expr>(new Expr(expr_type::ge,std::move(expr1),std::move(expr2)));
+}
+
+unique_ptr<Expr> Expr::GtExpr(unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
+    return unique_ptr<Expr>(new Expr(expr_type::gt,std::move(expr1),std::move(expr2)));
 }
 
 unique_ptr<Expr> Expr::IfExpr(unique_ptr<Expr> condition, unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
@@ -114,7 +178,7 @@ unique_ptr<Expr> Expr::OrExpr(unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
     return unique_ptr<Expr>(new Expr(disj, std::move(expr1), std::move(expr2)));
 }
 
-unique_ptr<Expr> Expr::IdExpr(const string& s) {
+unique_ptr<Expr> Expr::IdExpr(const string &s) {
     return unique_ptr<Expr>(new Expr(id, s));
 }
 
@@ -154,137 +218,162 @@ unique_ptr<Expr> Expr::DefWithExpr(Expr::define_expr defition, unique_ptr<Expr> 
     return unique_ptr<Expr>(new Expr(def_with_expr, std::move(defition), std::move(expr)));
 }
 
+
+
+
+
+
+
 ostream &operator<<(ostream &out, const Expr &self) {
-    return self.prettyPrint(out,0);
+    return self.prettyPrint(out, 0);
 }
 
-ostream& Expr::indentation(ostream &out, uint level) const {
-    for(int i=0;i<level;i++)
-        out<<'\t';
+ostream& Expr::relaional_output(ostream &out, uint level, const string& op_name) const {
+    auto &minus = std::get<Expr::binary_relation>(content);
+    indentation(out, level) <<op_name<< '(' << endl;
+    minus.expr1->prettyPrint(out, level + 1) << endl;
+    minus.expr2->prettyPrint(out, level + 1) << endl;
+    indentation(out, level) << ")";
     return out;
 }
 
-//todo:补全prettyPrint
-ostream& Expr::prettyPrint(ostream& out,uint level) const{
-    auto &self=(*this);
+
+template <class primary_T>
+ostream& Expr::primary_output(ostream &out, uint level, const string &val_name,std::function<string(const primary_T&)> getter) const {
+    auto &id = std::get<primary_T>(content);
+    indentation(out, level) << val_name<<'(';
+    out << getter(id);
+    out << ")";
+    return out;
+}
+
+Expr::variant_t &Expr::operator*() {
+    return content;
+}
+
+ostream &Expr::indentation(ostream &out, uint level) const {
+    for (int i = 0; i < level; i++)
+        out << '\t';
+    return out;
+}
+
+ostream &Expr::prettyPrint(ostream &out, uint level) const {
+    auto &self = (*this);
 
     switch (self.getTag()) {
         case Expr::cond: {
             auto &cond = std::get<Expr::if_caluse>(self.content);
-            indentation(out,level) << "if("<<endl;
-            cond.condition->prettyPrint(out,level+1)<<endl;
-            cond.expr1->prettyPrint(out,level+1)<<endl;
-            cond.expr2->prettyPrint(out,level+1)<<endl;
-            indentation(out,level)<<")";
+            indentation(out, level) << "if(" << endl;
+            cond.condition->prettyPrint(out, level + 1) << endl;
+            cond.expr1->prettyPrint(out, level + 1) << endl;
+            cond.expr2->prettyPrint(out, level + 1) << endl;
+            indentation(out, level) << ")";
             return out;
         }
-        case Expr::boolean: {
-            auto &logic = std::get<Expr::bool_expr>(self.content);
-            indentation(out,level) << "boolean(";
-            out << (logic.val ? "true" : "false");
-            out << ")";
+        case Expr::boolean:
+            return primary_output<Expr::bool_expr>(out,level,"boolean",[](auto b){return (b.val?"true":"false");});
+        case Expr::id:
+            return primary_output<Expr::id_expr>(out,level,"id",[](auto id){return id.name;});
+        case Expr::interger:
+            return primary_output<Expr::int_expr>(out,level,"int",[](auto i){return to_string(i.val);});
+        case Expr::neg: {
+            auto &neg = std::get<Expr::not_expr>(self.content);
+            indentation(out, level) << "not(" << endl;
+            neg.expr->prettyPrint(out, level + 1) << endl;
+            indentation(out, level) << ")";
             return out;
         }
-        case Expr::id: {
-            auto &id = std::get<Expr::id_expr>(self.content);
-            indentation(out,level) << "id(";
-            out << id.name;
-            out << ")";
+        case Expr::conj: {
+            auto &conj = std::get<Expr::and_expr>(self.content);
+            indentation(out, level) << "and(" << endl;
+            conj.expr1->prettyPrint(out, level + 1) << endl;
+            conj.expr2->prettyPrint(out, level + 1) << endl;
+            indentation(out, level) << ")";
             return out;
         }
-        case Expr::interger:{
-            auto &interger = std::get<Expr::interger>(self.content);
-            indentation(out,level)<<"int(";
-            out<<interger.val;
-            out<<")";
+        case Expr::disj: {
+            auto &disj = std::get<Expr::or_expr>(self.content);
+            indentation(out, level) << "or(" << endl;
+            disj.expr1->prettyPrint(out, level + 1) << endl;
+            disj.expr2->prettyPrint(out, level + 1) << endl;
+            indentation(out, level) << ')';
             return out;
         }
-        case Expr::neg:{
-            auto &neg=std::get<Expr::not_expr>(self.content);
-            indentation(out,level)<<"not("<<endl;
-            neg.expr->prettyPrint(out,level+1)<<endl;
-            indentation(out,level)<<")";
-            return out;
-        }
-        case Expr::conj:{
-            auto &conj=std::get<Expr::and_expr>(self.content);
-            indentation(out,level)<<"and("<<endl;
-            conj.expr1->prettyPrint(out,level+1)<<endl;
-            conj.expr2->prettyPrint(out,level+2)<<endl;
-            indentation(out,level)<<")";
-            return out;
-        }
-        case Expr::disj:{
-            auto &disj=std::get<Expr::or_expr>(self.content);
-            indentation(out,level)<<"or("<<endl;
-            disj.expr1->prettyPrint(out,level+1)<<endl;
-            disj.expr2->prettyPrint(out,level+1)<<endl;
-            indentation(out,level)<<')';
-            return out;
-        }
-        case Expr::apply:{
-            auto &apply=std::get<Expr::apply_expr>(self.content);
-            indentation(out,level)<<"apply("<<endl;
+        case Expr::apply: {
+            auto &apply = std::get<Expr::apply_expr>(self.content);
+            indentation(out, level) << "apply(" << endl;
             for (auto &item:apply.list)
-                item->prettyPrint(out,level+1)<<endl;
-            indentation(out,level)<<")";
+                item->prettyPrint(out, level + 1) << endl;
+            indentation(out, level) << ")";
             return out;
         }
-        case Expr::def:{
-            auto &def=std::get<Expr::define_expr>(self.content);
-            indentation(out,level)<<"define(";
-            out<<'(';
+        case Expr::def: {
+            auto &def = std::get<Expr::define_expr>(self.content);
+            indentation(out, level) << "define(";
+            out << '(';
             for (auto &item:def.arglist)
-                out<<item.name<<" ";
-            out<<')'<<endl;
-            def.body->prettyPrint(out,level+1)<<endl;
-            indentation(out,level)<<")";
+                out << item.name << " ";
+            out << ')' << endl;
+            def.body->prettyPrint(out, level + 1) << endl;
+            indentation(out, level) << ")";
             return out;
         }
-        case Expr::plus:{
-            auto &plus=std::get<Expr::arith_expr>(self.content);
-            indentation(out,level)<<"plus("<<endl;
+        case Expr::plus: {
+            auto &plus = std::get<Expr::arith_expr>(self.content);
+            indentation(out, level) << "plus(" << endl;
             for (auto &item:plus.operlist)
-                item->prettyPrint(out,level+1)<<endl;
-            indentation(out,level)<<")";
+                item->prettyPrint(out, level + 1) << endl;
+            indentation(out, level) << ")";
             return out;
         }
-        case Expr::minus:{
-            auto &minus=std::get<Expr::arith_expr>(self.content);
-            indentation(out,level)<<"minus("<<endl;
+        case Expr::minus: {
+            auto &minus = std::get<Expr::arith_expr>(self.content);
+            indentation(out, level) << "minus(" << endl;
             for (auto &item:minus.operlist)
-                item->prettyPrint(out,level+1)<<endl;
-            indentation(out,level)<<")";
+                item->prettyPrint(out, level + 1) << endl;
+            indentation(out, level) << ")";
             return out;
         }
-        case Expr::times:{
-            auto &times=std::get<Expr::arith_expr>(self.content);
-            indentation(out,level)<<"times("<<endl;
+        case Expr::times: {
+            auto &times = std::get<Expr::arith_expr>(self.content);
+            indentation(out, level) << "times(" << endl;
             for (auto &item:times.operlist)
-                item->prettyPrint(out,level+1)<<endl;
-            indentation(out,level)<<")";
+                item->prettyPrint(out, level + 1) << endl;
+            indentation(out, level) << ")";
             return out;
         }
-        case Expr::div:{
-            auto &div=std::get<Expr::arith_expr>(self.content);
-            indentation(out,level)<<"divide("<<endl;
+        case Expr::div: {
+            auto &div = std::get<Expr::arith_expr>(self.content);
+            indentation(out, level) << "divide(" << endl;
             for (auto &item:div.operlist)
-                item->prettyPrint(out,level+1)<<endl;
-            indentation(out,level)<<")";
+                item->prettyPrint(out, level + 1) << endl;
+            indentation(out, level) << ")";
             return out;
         }
-        case Expr::def_with_expr:{
-            auto &def_with=std::get<Expr::define_with_expr>(self.content);
-            indentation(out,level)<<"define("<<endl;
-            indentation(out,level+1)<<"(";
+        case Expr::def_with_expr: {
+            auto &def_with = std::get<Expr::define_with_expr>(self.content);
+            indentation(out, level) << "define(" << endl;
+            indentation(out, level + 1) << "(";
             for (auto &id:def_with.def_part.arglist)
-                out<<id.name<<' ';
-            out<<')'<<endl;
-            def_with.def_part.body->prettyPrint(out,level+1);
-            indentation(out,level)<<"in"<<endl;
-            def_with.expr->prettyPrint(out,level+1)<<endl;
-            indentation(out,level)<<')';
+                out << id.name << ' ';
+            out << ')' << endl;
+            def_with.def_part.body->prettyPrint(out, level + 1);
+            indentation(out, level) << "in" << endl;
+            def_with.expr->prettyPrint(out, level + 1) << endl;
+            indentation(out, level) << ')';
             return out;
         }
+        case eq:
+            return relaional_output(out,level,"eq");
+        case le:
+            return relaional_output(out,level,"le");
+        case ge:
+            return relaional_output(out,level,"ge");
+        case lt:
+            return relaional_output(out,level,"lt");
+        case gt:
+            return relaional_output(out,level,"gt");
     }
 }
+
+

@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(CLisp include)
 
-add_executable(CLisp main.cpp lexer.cpp syntax.cpp)
+add_executable(CLisp main.cpp lexer.cpp syntax.cpp syntaxer.cpp)
 
 
 # 调试词法解析器用项目
@@ -21,4 +21,4 @@ project(Syntaxer)
 
 include_directories(Syntaxer include)
 
-add_executable(Syntaxer syntax.cpp syntaxer_debug.cpp)
+add_executable(Syntaxer syntax.cpp syntaxer_debug.cpp lexer.cpp syntaxer.cpp)
