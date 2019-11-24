@@ -110,7 +110,7 @@ ostream &operator<<(ostream &out, const Token &self) {
             out << "if";
             break;
         case TokenType::def:
-            out << "def";
+            out << "def_func";
             break;
         case TokenType::lbr:
             out << "LBR";

@@ -12,22 +12,16 @@ Expr::expr_type Expr::getTag() const {
         case 0:
             return cond;
         case 1:
-            return neg;
-        case 2:
-            return conj;
-        case 3:
-            return disj;
-        case 4:
             return id;
-        case 5:
+        case 2:
             return boolean;
-        case 6:
+        case 3:
             return interger;
-        case 7:
+        case 4:
             return apply;
-        case 8:
-            return def;
-        case 9:
+        case 5:
+            return def_func;
+        case 6:
             switch (std::get<arith_expr>(content).tag) {
                 case op_type::times:
                     return times;
@@ -38,9 +32,9 @@ Expr::expr_type Expr::getTag() const {
                 case op_type::div:
                     return div;
             }
-        case 10:
+        case 7:
             return def_with_expr;
-        case 11:
+        case 8:
             switch (std::get<binary_relation>(content).tag) {
                 case binary_relation::rel_type::eq:
                     return eq;
@@ -53,6 +47,8 @@ Expr::expr_type Expr::getTag() const {
                 case binary_relation::rel_type::gt:
                     return gt;
             }
+        case 9:
+            return def_variable;
         default:
             throw exception();//这种情况出现了我也不知道怎么办，就让它证明失败好了
     }
@@ -87,16 +83,9 @@ Expr::Expr(Expr::expr_type t, vector<unique_ptr<Expr>> list) {
     }
 }
 
-Expr::Expr(Expr::expr_type t, unique_ptr<Expr> expr) : content(not_expr{std::move(expr)}) {}
 
 Expr::Expr(Expr::expr_type t, unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
     switch (t) {
-        case disj:
-            content.emplace<or_expr>(or_expr{std::move(expr1), std::move(expr2)});
-            break;
-        case conj:
-            content.emplace<and_expr>(and_expr{std::move(expr1), std::move(expr2)});
-            break;
         case eq:
             content.emplace<binary_relation>(
                     binary_relation{binary_relation::rel_type::eq, std::move(expr1), std::move(expr2)});
@@ -123,15 +112,27 @@ Expr::Expr(Expr::expr_type t, unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
 }
 
 Expr::Expr(Expr::expr_type t, vector<Expr::id_expr> arglist, unique_ptr<Expr> body) :
-        content(define_expr{std::move(arglist), std::move(body)}) {}
+        content(define_func{std::move(arglist), std::move(body)}) {}
 
 Expr::Expr(Expr::expr_type t, unique_ptr<Expr> expr1, unique_ptr<Expr> expr2, unique_ptr<Expr> expr3) :
         content(if_caluse{std::move(expr1), std::move(expr2), std::move(expr3)}) {}
 
-Expr::Expr(Expr::expr_type t, Expr::define_expr definePart, unique_ptr<Expr> expr) :
+Expr::Expr(Expr::expr_type t, Expr::define_func definePart, unique_ptr<Expr> expr) :
         content(define_with_expr{std::move(definePart), std::move(expr)}) {
 
 }
+
+Expr::Expr(Expr::expr_type t, const string &s, unique_ptr<Expr> body):
+        content(define_val{s,std::move(body)})
+{
+
+}
+
+
+unique_ptr<Expr> Expr::DefValExpr(const string &s, unique_ptr<Expr> body) {
+    return unique_ptr<Expr>(new Expr(expr_type::def_variable,s,std::move(body)));
+}
+
 
 
 /*
@@ -198,7 +199,7 @@ unique_ptr<Expr> Expr::ApplyExpr(vector<unique_ptr<Expr>> list) {
 }
 
 unique_ptr<Expr> Expr::DefExpr(vector<id_expr> arglist, unique_ptr<Expr> body) {
-    return unique_ptr<Expr>(new Expr(def, std::move(arglist), std::move(body)));
+    return unique_ptr<Expr>(new Expr(def_func, std::move(arglist), std::move(body)));
 }
 
 unique_ptr<Expr> Expr::PlusExpr(vector<unique_ptr<Expr>> opers) {
@@ -217,9 +218,12 @@ unique_ptr<Expr> Expr::DivExpr(vector<unique_ptr<Expr>> opers) {
     return unique_ptr<Expr>(new Expr(div, std::move(opers)));
 }
 
-unique_ptr<Expr> Expr::DefWithExpr(Expr::define_expr defition, unique_ptr<Expr> expr) {
+unique_ptr<Expr> Expr::DefWithExpr(Expr::define_func defition, unique_ptr<Expr> expr) {
     return unique_ptr<Expr>(new Expr(def_with_expr, std::move(defition), std::move(expr)));
 }
+
+
+
 
 
 ostream &operator<<(ostream &out, const Expr &self) {
@@ -276,29 +280,6 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             return primary_output<Expr::id_expr>(out, level, "id", [](auto id) { return id.name; });
         case Expr::interger:
             return primary_output<Expr::int_expr>(out, level, "int", [](auto i) { return to_string(i.val); });
-        case Expr::neg: {
-            auto &neg = std::get<Expr::not_expr>(self.content);
-            indentation(out, level) << "not(" << endl;
-            neg.expr->prettyPrint(out, level + 1) << endl;
-            indentation(out, level) << ")";
-            return out;
-        }
-        case Expr::conj: {
-            auto &conj = std::get<Expr::and_expr>(self.content);
-            indentation(out, level) << "and(" << endl;
-            conj.expr1->prettyPrint(out, level + 1) << endl;
-            conj.expr2->prettyPrint(out, level + 1) << endl;
-            indentation(out, level) << ")";
-            return out;
-        }
-        case Expr::disj: {
-            auto &disj = std::get<Expr::or_expr>(self.content);
-            indentation(out, level) << "or(" << endl;
-            disj.expr1->prettyPrint(out, level + 1) << endl;
-            disj.expr2->prettyPrint(out, level + 1) << endl;
-            indentation(out, level) << ')';
-            return out;
-        }
         case Expr::apply: {
             auto &apply = std::get<Expr::apply_expr>(self.content);
             indentation(out, level) << "apply(" << endl;
@@ -307,8 +288,8 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             indentation(out, level) << ")";
             return out;
         }
-        case Expr::def: {
-            auto &def = std::get<Expr::define_expr>(self.content);
+        case Expr::def_func: {
+            auto &def = std::get<Expr::define_func>(self.content);
             indentation(out, level) << "define(";
             out << '(';
             for (auto &item:def.arglist)
@@ -373,7 +354,18 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             return relaional_output(out, level, "lt");
         case gt:
             return relaional_output(out, level, "gt");
+        case def_variable:{
+            auto &def_var=std::get<Expr::define_val>(self.content);
+            indentation(out, level) << "define(" << endl;
+            indentation(out, level + 1) << def_var.name<<endl;
+            def_var.body->prettyPrint(out,level+1)<<endl;
+            indentation(out, level) << ')';
+            return out;
+        }
     }
 }
+
+
+
 
 

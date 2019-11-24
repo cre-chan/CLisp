@@ -20,21 +20,6 @@ public:
         unique_ptr<Expr> condition, expr1, expr2;
     };
 
-    // (not expr)
-    struct not_expr {
-        unique_ptr<Expr> expr;
-    };
-
-    // (and expr1 expr2)
-    struct and_expr {
-        unique_ptr<Expr> expr1, expr2;
-    };
-
-    // (or expr1 expr2)
-    struct or_expr {
-        unique_ptr<Expr> expr1, expr2;
-    };
-
     // id
     struct id_expr {
         string name;
@@ -56,8 +41,13 @@ public:
     };
 
     // (define (func x1...xn) expr)|(define id expr)
-    struct define_expr {
+    struct define_func {
         vector<id_expr>  arglist;
+        unique_ptr<Expr> body;
+    };
+
+    struct define_val{
+        string name;
         unique_ptr<Expr> body;
     };
 
@@ -75,7 +65,7 @@ public:
 
     // (define expr)
     struct define_with_expr{
-        define_expr def_part;
+        define_func def_part;
         unique_ptr<Expr> expr;
     };
 
@@ -94,9 +84,6 @@ public:
 
     enum expr_type {
         cond,   //条件
-        neg,    //否定
-        conj,   //合取
-        disj,   //析取
         eq,
         le,
         ge,
@@ -106,19 +93,20 @@ public:
         boolean,    //布尔
         interger,   //整数
         apply,      //函数
-        def,        //定义
+        def_func,   //定义
         plus,
         minus,
         times,
         div,         //算术
-        def_with_expr   //有define部分的表达式
+        def_with_expr,   //有define部分的表达式
+        def_variable
     };
 
     //将op_type的定义提到Expr里
     using op_type=arith_expr::op_type;
     using variant_t=variant<
-            if_caluse, not_expr, and_expr, or_expr, id_expr,
-            bool_expr, int_expr, apply_expr, define_expr, arith_expr,define_with_expr,binary_relation>;
+            if_caluse, id_expr,
+            bool_expr, int_expr, apply_expr, define_func, arith_expr,define_with_expr,binary_relation,define_val>;
     using rel_type=binary_relation::rel_type ;
     //获得该节点的类型
     expr_type getTag() const;
@@ -162,7 +150,9 @@ public:
 
     static unique_ptr<Expr> DivExpr(vector<unique_ptr<Expr>>);
 
-    static unique_ptr<Expr> DefWithExpr(define_expr,unique_ptr<Expr>);
+    static unique_ptr<Expr> DefWithExpr(define_func,unique_ptr<Expr>);
+
+    static unique_ptr<Expr> DefValExpr(const string&,unique_ptr<Expr> body);
 
     //以带缩进格式输出抽象语法树
     friend ostream &operator<<(ostream &, const Expr &);
@@ -182,11 +172,11 @@ private:
     Expr(expr_type, bool);          //布尔型字面量
     Expr(expr_type, int);           //整形字面量
     Expr(expr_type, const string &); //ID表达式
+    Expr(expr_type, const string &,unique_ptr<Expr>); //ID表达式
     Expr(expr_type, vector<unique_ptr<Expr>>);  //函数调用
-    Expr(expr_type, unique_ptr<Expr>);  //NOT表达式
-    Expr(expr_type, unique_ptr<Expr>, unique_ptr<Expr>);    //'AND表达式OR表达式,以及关系表达式
+    Expr(expr_type, unique_ptr<Expr>, unique_ptr<Expr>);    //关系表达式
     Expr(expr_type, vector<id_expr>, unique_ptr<Expr>);     // DEFINE表达式
-    Expr(expr_type, define_expr,unique_ptr<Expr>);
+    Expr(expr_type, define_func,unique_ptr<Expr>);
     Expr(expr_type, unique_ptr<Expr>, unique_ptr<Expr>, unique_ptr<Expr>); //if表达式
 };
 
