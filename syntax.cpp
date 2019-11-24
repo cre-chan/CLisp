@@ -41,16 +41,16 @@ Expr::expr_type Expr::getTag() const {
         case 10:
             return def_with_expr;
         case 11:
-            switch (std::get<binary_relation>(content).tag){
-                case binary_relation::rel_type ::eq:
+            switch (std::get<binary_relation>(content).tag) {
+                case binary_relation::rel_type::eq:
                     return eq;
-                case binary_relation::rel_type ::le:
+                case binary_relation::rel_type::le:
                     return le;
-                case binary_relation::rel_type ::lt:
+                case binary_relation::rel_type::lt:
                     return lt;
-                case binary_relation::rel_type ::ge:
+                case binary_relation::rel_type::ge:
                     return ge;
-                case binary_relation::rel_type ::gt:
+                case binary_relation::rel_type::gt:
                     return gt;
             }
         default:
@@ -134,32 +134,27 @@ Expr::Expr(Expr::expr_type t, Expr::define_expr definePart, unique_ptr<Expr> exp
 }
 
 
-
-
-
-
-
 /*
  * 快速构建包裹在unique_ptr里的表达式类型
  * */
 unique_ptr<Expr> Expr::EqExpr(unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
-    return unique_ptr<Expr>(new Expr(expr_type::eq,std::move(expr1),std::move(expr2)));
+    return unique_ptr<Expr>(new Expr(expr_type::eq, std::move(expr1), std::move(expr2)));
 }
 
 unique_ptr<Expr> Expr::LeExpr(unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
-    return unique_ptr<Expr>(new Expr(expr_type::le,std::move(expr1),std::move(expr2)));
+    return unique_ptr<Expr>(new Expr(expr_type::le, std::move(expr1), std::move(expr2)));
 }
 
 unique_ptr<Expr> Expr::LtExpr(unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
-    return unique_ptr<Expr>(new Expr(expr_type::lt,std::move(expr1),std::move(expr2)));
+    return unique_ptr<Expr>(new Expr(expr_type::lt, std::move(expr1), std::move(expr2)));
 }
 
 unique_ptr<Expr> Expr::GeExpr(unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
-    return unique_ptr<Expr>(new Expr(expr_type::ge,std::move(expr1),std::move(expr2)));
+    return unique_ptr<Expr>(new Expr(expr_type::ge, std::move(expr1), std::move(expr2)));
 }
 
 unique_ptr<Expr> Expr::GtExpr(unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
-    return unique_ptr<Expr>(new Expr(expr_type::gt,std::move(expr1),std::move(expr2)));
+    return unique_ptr<Expr>(new Expr(expr_type::gt, std::move(expr1), std::move(expr2)));
 }
 
 unique_ptr<Expr> Expr::IfExpr(unique_ptr<Expr> condition, unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
@@ -167,15 +162,23 @@ unique_ptr<Expr> Expr::IfExpr(unique_ptr<Expr> condition, unique_ptr<Expr> expr1
 }
 
 unique_ptr<Expr> Expr::NegExpr(unique_ptr<Expr> expr) {
-    return unique_ptr<Expr>(new Expr(neg, std::move(expr)));
+    return IfExpr(std::move(expr), BooleanExpr(false), BooleanExpr(true));
+    //return unique_ptr<Expr>(new Expr(neg, std::move(expr)));
 }
 
 unique_ptr<Expr> Expr::AndExpr(unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
-    return unique_ptr<Expr>(new Expr(conj, std::move(expr1), std::move(expr2)));
+    return IfExpr(std::move(expr1),
+                  IfExpr(std::move(expr2), BooleanExpr(true), BooleanExpr(false)),
+                  BooleanExpr(false));
+    //return unique_ptr<Expr>(new Expr(conj, std::move(expr1), std::move(expr2)));
 }
 
 unique_ptr<Expr> Expr::OrExpr(unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
-    return unique_ptr<Expr>(new Expr(disj, std::move(expr1), std::move(expr2)));
+    return IfExpr(std::move(expr1),
+                  BooleanExpr(true),
+                  IfExpr(std::move(expr2), BooleanExpr(true), BooleanExpr(false))
+    );
+    //return unique_ptr<Expr>(new Expr(disj, std::move(expr1), std::move(expr2)));
 }
 
 unique_ptr<Expr> Expr::IdExpr(const string &s) {
@@ -219,18 +222,13 @@ unique_ptr<Expr> Expr::DefWithExpr(Expr::define_expr defition, unique_ptr<Expr> 
 }
 
 
-
-
-
-
-
 ostream &operator<<(ostream &out, const Expr &self) {
     return self.prettyPrint(out, 0);
 }
 
-ostream& Expr::relaional_output(ostream &out, uint level, const string& op_name) const {
+ostream &Expr::relaional_output(ostream &out, uint level, const string &op_name) const {
     auto &minus = std::get<Expr::binary_relation>(content);
-    indentation(out, level) <<op_name<< '(' << endl;
+    indentation(out, level) << op_name << '(' << endl;
     minus.expr1->prettyPrint(out, level + 1) << endl;
     minus.expr2->prettyPrint(out, level + 1) << endl;
     indentation(out, level) << ")";
@@ -238,10 +236,11 @@ ostream& Expr::relaional_output(ostream &out, uint level, const string& op_name)
 }
 
 
-template <class primary_T>
-ostream& Expr::primary_output(ostream &out, uint level, const string &val_name,std::function<string(const primary_T&)> getter) const {
+template<class primary_T>
+ostream &Expr::primary_output(ostream &out, uint level, const string &val_name,
+                              std::function<string(const primary_T &)> getter) const {
     auto &id = std::get<primary_T>(content);
-    indentation(out, level) << val_name<<'(';
+    indentation(out, level) << val_name << '(';
     out << getter(id);
     out << ")";
     return out;
@@ -271,11 +270,12 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             return out;
         }
         case Expr::boolean:
-            return primary_output<Expr::bool_expr>(out,level,"boolean",[](auto b){return (b.val?"true":"false");});
+            return primary_output<Expr::bool_expr>(out, level, "boolean",
+                                                   [](auto b) { return (b.val ? "true" : "false"); });
         case Expr::id:
-            return primary_output<Expr::id_expr>(out,level,"id",[](auto id){return id.name;});
+            return primary_output<Expr::id_expr>(out, level, "id", [](auto id) { return id.name; });
         case Expr::interger:
-            return primary_output<Expr::int_expr>(out,level,"int",[](auto i){return to_string(i.val);});
+            return primary_output<Expr::int_expr>(out, level, "int", [](auto i) { return to_string(i.val); });
         case Expr::neg: {
             auto &neg = std::get<Expr::not_expr>(self.content);
             indentation(out, level) << "not(" << endl;
@@ -364,15 +364,15 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             return out;
         }
         case eq:
-            return relaional_output(out,level,"eq");
+            return relaional_output(out, level, "eq");
         case le:
-            return relaional_output(out,level,"le");
+            return relaional_output(out, level, "le");
         case ge:
-            return relaional_output(out,level,"ge");
+            return relaional_output(out, level, "ge");
         case lt:
-            return relaional_output(out,level,"lt");
+            return relaional_output(out, level, "lt");
         case gt:
-            return relaional_output(out,level,"gt");
+            return relaional_output(out, level, "gt");
     }
 }
 
