@@ -1,5 +1,6 @@
-#include <iostream>
+#include "stdafx.h"
 #include <lexer.h>
+#include <syntax.h>
 
 int main() {
     char c;

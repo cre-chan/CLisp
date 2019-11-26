@@ -16,7 +16,9 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <stdexcept>
 
+using namespace std;
 
 
 #endif //LEXER_STDAFX_H

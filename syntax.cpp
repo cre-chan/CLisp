@@ -350,7 +350,7 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             return relaional_output(out, level, "le");
         case ge:
             return relaional_output(out, level, "ge");
-        case lt:
+        case lt:https://www.google.com/search?client=ubuntu&channel=fs&q=coq+generalize&ie=utf-8&oe=utf-8
             return relaional_output(out, level, "lt");
         case gt:
             return relaional_output(out, level, "gt");
