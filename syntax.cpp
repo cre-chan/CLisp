@@ -106,6 +106,9 @@ Expr::Expr(Expr::expr_type t, unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
             content.emplace<binary_relation>(
                     binary_relation{binary_relation::rel_type::gt, std::move(expr1), std::move(expr2)});
             break;
+        case def_with_expr:
+            content.emplace<define_with_expr>(define_with_expr{std::move(expr1), std::move(expr2)});
+            break;
         default:
             throw exception();
     }
@@ -117,10 +120,10 @@ Expr::Expr(Expr::expr_type t, vector<Expr::id_expr> arglist, unique_ptr<Expr> bo
 Expr::Expr(Expr::expr_type t, unique_ptr<Expr> expr1, unique_ptr<Expr> expr2, unique_ptr<Expr> expr3) :
         content(if_caluse{std::move(expr1), std::move(expr2), std::move(expr3)}) {}
 
-Expr::Expr(Expr::expr_type t, Expr::define_func definePart, unique_ptr<Expr> expr) :
-        content(define_with_expr{std::move(definePart), std::move(expr)}) {
-
-}
+//Expr::Expr(Expr::expr_type t, unique_ptr<Expr> definePart, unique_ptr<Expr> expr) :
+//        content(define_with_expr{std::move(definePart), std::move(expr)}) {
+//
+//}
 
 Expr::Expr(Expr::expr_type t, const string &s, unique_ptr<Expr> body):
         content(define_val{s,std::move(body)})
@@ -218,7 +221,7 @@ unique_ptr<Expr> Expr::DivExpr(vector<unique_ptr<Expr>> opers) {
     return unique_ptr<Expr>(new Expr(div, std::move(opers)));
 }
 
-unique_ptr<Expr> Expr::DefWithExpr(Expr::define_func defition, unique_ptr<Expr> expr) {
+unique_ptr<Expr> Expr::DefWithExpr(unique_ptr<Expr> defition, unique_ptr<Expr> expr) {
     return unique_ptr<Expr>(new Expr(def_with_expr, std::move(defition), std::move(expr)));
 }
 
@@ -333,13 +336,14 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
         }
         case Expr::def_with_expr: {
             auto &def_with = std::get<Expr::define_with_expr>(self.content);
-            indentation(out, level) << "define(" << endl;
-            indentation(out, level + 1) << "(";
-            for (auto &id:def_with.def_part.arglist)
-                out << id.name << ' ';
-            out << ')' << endl;
-            def_with.def_part.body->prettyPrint(out, level + 1);
-            indentation(out, level) << "in" << endl;
+            indentation(out, level) << "(" << endl;
+            def_with.def_part->prettyPrint(out,level+1)<<" in"<<endl;
+//            indentation(out, level + 1) << "(";
+//            for (auto &id:def_with.def_part.arglist)
+//                out << id.name << ' ';
+//            out << ')' << endl;
+//            def_with.def_part.body->prettyPrint(out, level + 1);
+//            indentation(out, level) << "in" << endl;
             def_with.expr->prettyPrint(out, level + 1) << endl;
             indentation(out, level) << ')';
             return out;

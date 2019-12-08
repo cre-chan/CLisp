@@ -12,7 +12,20 @@
  * */
 
 
-std::tuple<SymbolTable<string>,SymbolTable<Expr>>
-symantic_check();
+struct FuncSignature {
+    string global_name;
+    std::forward_list<string> argnames;
+};
+
+
+using ResultType=std::tuple<
+        unique_ptr<Expr>,
+        shared_ptr<SymbolTable<FuncSignature>>,
+        shared_ptr<SymbolTable<Expr>>
+>;
+
+//返回一个(Optional<Expr>,local_name_to_func_signature, global_name_to_modified_ast)
+ResultType
+symantic_check(unique_ptr<Expr>, const shared_ptr<SymbolTable<FuncSignature>> &, const string &);
 
 #endif //SYMANTICS_SYMANTICS_H

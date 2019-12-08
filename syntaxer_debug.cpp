@@ -17,15 +17,12 @@ int main(){
 //            );
 //
 //    cout<<(*simple_program);
-    try {
+
         while (true) {
             Syntaxer temp;
             cout << ">>>";
             cout << *temp.parseExpr() << endl;
         }
-    }catch (exception &err){
-
-    }
 
     return 0;
 }

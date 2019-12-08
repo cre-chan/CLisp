@@ -67,7 +67,7 @@ unique_ptr<Expr> Syntaxer::reduce(uint upper_bound) {
                     auto expr_body = std::move(std::get<unique_ptr<Expr>>(tempStack.back()));
                     auto variable_name = std::move(std::get<Expr::id_expr>(*(*arglist)));
                     tempStack.pop_back();
-                    return Expr::DefValExpr(variable_name.name,std::move(expr_body));
+                    return Expr::DefValExpr(variable_name.name, std::move(expr_body));
                 } else if (arglist->getTag() == Expr::expr_type::apply) {
                     vector<unique_ptr<Expr>> arguments = std::move(std::get<Expr::apply_expr>(*(*arglist)).list);
                     vector<Expr::id_expr> arg_names;
@@ -132,40 +132,42 @@ unique_ptr<Expr> Syntaxer::reduce(uint upper_bound) {
             case Expr::cond:
             case Expr::id:
             case Expr::def_with_expr:
-            case Expr::apply:{
+            case Expr::apply: {
                 vector<unique_ptr<Expr>> arglist;
                 arglist.push_back(std::move(std::get<unique_ptr<Expr>>(oper)));
                 tempStack.pop_back();
-                while (!tempStack.empty()){
+                while (!tempStack.empty()) {
                     arglist.push_back(std::move(std::get<unique_ptr<Expr>>(tempStack.back())));
                     tempStack.pop_back();
                 }
                 return Expr::ApplyExpr(std::move(arglist));
             }
-            case Expr::def_func:{
-                auto def=std::move(std::get<unique_ptr<Expr>>(oper));
+            case Expr::def_variable:
+            case Expr::def_func: {
+                auto def = std::move(std::get<unique_ptr<Expr>>(oper));
                 tempStack.pop_back();
                 vector<unique_ptr<Expr>> exprs;
 
                 exprs.push_back(std::move(def));
 
-                while (std::get<unique_ptr<Expr>>(tempStack.back())->getTag()==Expr::def_func){
+                while (std::get<unique_ptr<Expr>>(tempStack.back())->getTag() == Expr::def_func ||
+                       std::get<unique_ptr<Expr>>(tempStack.back())->getTag() == Expr::def_variable) {
                     exprs.push_back(std::move(std::get<unique_ptr<Expr>>(tempStack.back())));
                     tempStack.pop_back();
                 }
 
-                auto expr_body=std::move(std::get<unique_ptr<Expr>>(tempStack.back()));
+                auto expr_body = std::move(std::get<unique_ptr<Expr>>(tempStack.back()));
                 tempStack.pop_back();
-                auto def_with=Expr::DefWithExpr(std::move(std::get<Expr::define_func>(**exprs.back())),std::move(expr_body));
+                auto def_with = Expr::DefWithExpr(std::move(exprs.back()), std::move(expr_body));
                 exprs.pop_back();
-                while(!exprs.empty()){
-                    def_with=Expr::DefWithExpr(std::move(std::get<Expr::define_func>(**exprs.back())),std::move(def_with));
+                while (!exprs.empty()) {
+                    def_with = Expr::DefWithExpr(std::move(exprs.back()), std::move(def_with));
                     exprs.pop_back();
                 }
                 return std::move(def_with);
             }
 
-            //基础类型不是applicative的
+                //基础类型不是applicative的
             case Expr::eq:
             case Expr::le:
             case Expr::ge:

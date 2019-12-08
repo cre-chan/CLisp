@@ -17,6 +17,8 @@
 #include <memory>
 #include <functional>
 #include <stdexcept>
+#include <forward_list>
+#include <algorithm>
 
 using namespace std;
 

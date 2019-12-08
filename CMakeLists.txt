@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(CLisp include)
 
-add_executable(CLisp main.cpp lexer.cpp syntax.cpp syntaxer.cpp symantic_debug.cpp include/SymbolTable.hpp)
+add_executable(CLisp main.cpp lexer.cpp syntax.cpp syntaxer.cpp include/SymbolTable.hpp)
 
 
 # 调试词法解析器用项目
@@ -24,9 +24,17 @@ include_directories(Syntaxer include)
 add_executable(Syntaxer syntax.cpp syntaxer_debug.cpp lexer.cpp syntaxer.cpp)
 
 
+#符号表的调试
+project(Symtable)
 
-project(Symantics)
+include_directories(Symtable include)
 
-include_directories(Symantics include)
+add_executable(Symtable sym_debug.cpp)
 
-add_executable(Symantics symantics.cpp symantic_debug.cpp include/SymbolTable.hpp)
+
+#语义分析的测试
+project(Semantics)
+
+include_directories(Semantics include)
+
+add_executable(Semantics symantics.cpp Semantics_debug.cpp syntax.cpp syntaxer.cpp lexer.cpp)

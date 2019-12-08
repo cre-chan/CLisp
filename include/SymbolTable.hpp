@@ -28,7 +28,7 @@ class SymbolTable {
     }//一般构造函数
 
     bool is_nil() const {
-        return this == NIL().get();
+        return this->symbol_name.empty();
     }//比较当前对象的地址和空表的地址
 
 public:
@@ -51,6 +51,7 @@ public:
         if (this->is_nil())
             return LEAF(name, std::move(val));
 
+        //当名字已经存在时，shadow该名字
         if (name == this->symbol_name)
             return INTERNAL(name, std::move(val), this->left, this->right);
         else if (name < this->symbol_name)
@@ -72,6 +73,7 @@ public:
             return this->right->find(keyword);
     }
 
+
     ostream &output_key_val_pair(ostream &out) const {
         if (this->is_nil())
             return out;
@@ -84,7 +86,19 @@ public:
 
         return out;
     }
+
+    SymbolTable<V> operator+(const SymbolTable<V>& other) {
+        if (this->is_nil())
+            return other;
+
+        return (*this->left)+(*this->right)+(*other.insert(this->symbol_name,this->value));
+    }
 };
+
+template <class T>
+shared_ptr<T> operator+(shared_ptr<T> op1,shared_ptr<T> op2){
+    return make_shared<T>(*op1+*op2);
+}
 
 template<class V>
 ostream &operator<<(ostream &out, SymbolTable<V> &tbl) {

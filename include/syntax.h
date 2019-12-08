@@ -65,7 +65,7 @@ public:
 
     // (define expr)
     struct define_with_expr{
-        define_func def_part;
+        unique_ptr<Expr> def_part;
         unique_ptr<Expr> expr;
     };
 
@@ -150,7 +150,7 @@ public:
 
     static unique_ptr<Expr> DivExpr(vector<unique_ptr<Expr>>);
 
-    static unique_ptr<Expr> DefWithExpr(define_func,unique_ptr<Expr>);
+    static unique_ptr<Expr> DefWithExpr(unique_ptr<Expr>,unique_ptr<Expr>);
 
     static unique_ptr<Expr> DefValExpr(const string&,unique_ptr<Expr> body);
 
@@ -176,7 +176,6 @@ private:
     Expr(expr_type, vector<unique_ptr<Expr>>);  //函数调用
     Expr(expr_type, unique_ptr<Expr>, unique_ptr<Expr>);    //关系表达式
     Expr(expr_type, vector<id_expr>, unique_ptr<Expr>);     // DEFINE表达式
-    Expr(expr_type, define_func,unique_ptr<Expr>);
     Expr(expr_type, unique_ptr<Expr>, unique_ptr<Expr>, unique_ptr<Expr>); //if表达式
 };
 

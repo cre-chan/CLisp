@@ -11,6 +11,14 @@ int main() {
     string cmd;
     auto tbl = SymbolTable<string>::NIL();
 
+    auto tbl2=SymbolTable<string>::NIL();
+    tbl=tbl+tbl2;
+
+    auto tbl3=SymbolTable<string>::NIL();
+    tbl=tbl3+tbl;
+
+    cout<<tbl<<endl;
+
     do {
         cout << ">>>";
         cin >> cmd;
