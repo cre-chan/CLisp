@@ -67,10 +67,12 @@ public:
     static Token    And();          //and运算符
     static Token    Or();           //or运算符
     static Token    Not();          //not 运算符
+    static Token    Default();
 private:
     TokenType   tag;
     variant<monostate,int,string,bool> content;
 
+    Token();
     explicit Token(TokenType);
     Token(TokenType, const string&);
     Token(TokenType, int);
@@ -88,8 +90,6 @@ class Lexer{
     int ln;
     int offset;
 
-    char skipAndReturn();
-    int parseInt();
 public:
     Lexer();
     Token getToken();

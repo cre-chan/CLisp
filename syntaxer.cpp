@@ -189,11 +189,10 @@ unique_ptr<Expr> Syntaxer::reduce(uint upper_bound) {
 }
 
 unique_ptr<Expr> Syntaxer::parseExpr() {
-    for (
-            auto token = input_stream.getToken();
-            token.getTag() != Token::nextline || !left_brackets.empty();
-            token = input_stream.getToken()
-            ) {
+    Token token=Token::Default();
+
+    do {
+        token = input_stream.getToken();
         switch (token.getTag()) {
             case Token::lbr:
                 //记录当前栈的大小
@@ -235,8 +234,8 @@ unique_ptr<Expr> Syntaxer::parseExpr() {
                 break;
             case Token::eof:
                 break;
-        }
-    }
+        };
+    } while (!left_brackets.empty());
 
     //从栈中移出最终结果，并清空栈
     auto ret = std::move(std::get<unique_ptr<Expr>>(operands.back()));

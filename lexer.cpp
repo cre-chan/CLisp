@@ -18,7 +18,7 @@ Token::Token(TokenType t) : tag(t) {}
 Token::Token(TokenType t, int i) : tag(t), content(i) {}
 
 //创建一个标识符
-Token::Token(TokenType t, const string& s) : tag(t), content(s) {}
+Token::Token(TokenType t, const string &s) : tag(t), content(s) {}
 
 Token::Token(Token::TokenType t, bool literal) : tag(t), content(literal) {}
 
@@ -42,13 +42,13 @@ bool Token::getBooleanValue() const {
  * */
 Token Token::Lbr() { return Token(TokenType::lbr); }
 
-Token Token::Rbr() {return Token(TokenType::rbr);}
+Token Token::Rbr() { return Token(TokenType::rbr); }
 
 Token Token::Def() { return Token(TokenType::def); }
 
 Token Token::Cond() { return Token(TokenType::cond); }
 
-Token Token::Identifier(const string& name) { return Token(TokenType::identifier, name); }
+Token Token::Identifier(const string &name) { return Token(TokenType::identifier, name); }
 
 Token Token::Interger(int i) { return Token(TokenType::interger, i); }
 
@@ -76,11 +76,11 @@ Token Token::Lt() { return Token(TokenType::lt); }
 
 Token Token::Gt() { return Token(TokenType::gt); }
 
-Token Token::Ge() {return Token(TokenType::ge);}
+Token Token::Ge() { return Token(TokenType::ge); }
 
-Token Token::Le() {return Token(TokenType::le);}
+Token Token::Le() { return Token(TokenType::le); }
 
-Token Token::Boolean(bool b) {return Token(TokenType::boolean,b);}
+Token Token::Boolean(bool b) { return Token(TokenType::boolean, b); }
 
 // Token's output
 ostream &operator<<(ostream &out, const Token &self) {
@@ -116,41 +116,47 @@ ostream &operator<<(ostream &out, const Token &self) {
             out << "LBR";
             break;
         case TokenType::rbr:
-            out<<"RBR";
+            out << "RBR";
             break;
         case TokenType::nextline:
             out << endl;
             break;
         case TokenType::boolean:
-            out << "boolean("<<(self.getBooleanValue()?"true":"false")<<")";
+            out << "boolean(" << (self.getBooleanValue() ? "true" : "false") << ")";
             break;
         case TokenType::ge:
             out << "ge";
             break;
         case TokenType::or_op:
-            out<<"or";
+            out << "or";
             break;
         case TokenType::and_op:
-            out<<"and";
+            out << "and";
             break;
         case TokenType::not_op:
-            out<<"not";
+            out << "not";
             break;
         case TokenType::gt:
-            out<<"gt";
+            out << "gt";
             break;
         case TokenType::le:
-            out<<"le";
+            out << "le";
             break;
         case TokenType::lt:
-            out<<"lt";
+            out << "lt";
             break;
         case TokenType::eq:
-            out<<"eq";
+            out << "eq";
             break;
     }
 
     return out;
+}
+
+Token::Token() = default;
+
+Token Token::Default() {
+    return Token();
 }
 
 
@@ -159,122 +165,90 @@ ostream &operator<<(ostream &out, const Token &self) {
  *
  * */
 Lexer::Lexer() :
-    temp_c('\t'), is_c_out_of_date(true),ln(1),offset(0) {}
-
-char Lexer::skipAndReturn() {
-    offset++;
-    return cin.get();
-}
-
-//msd为most significant digit的缩写，即指定可选的最高位
-int Lexer::parseInt() {
-    int sum=0;
-    while (isdigit(temp_c)) {
-        sum = sum * 10 + temp_c - '0';
-        temp_c = skipAndReturn();
-    }
-    return sum;
-}
+        temp_c('\t'), is_c_out_of_date(true), ln(1), offset(0) {}
 
 Token Lexer::getToken() {
-    //避免重复读入
-    if (is_c_out_of_date) {
-        temp_c = skipAndReturn();
-        is_c_out_of_date = false;
-    }
 
-    //跳过所有空格和tab
-    while (
-            isblank(temp_c)
-            )
-        temp_c = skipAndReturn();
+    char look_ahead;
 
-    //simple token
-    switch (temp_c) {
-        case '(':
-            is_c_out_of_date = true;
-            return Token::Lbr();
-        case ')':
-            is_c_out_of_date = true;
-            return Token::Rbr();
-        case '*':
-            is_c_out_of_date = true;
-            return Token::Mul();
-        case '-':
-            temp_c=skipAndReturn();
-            if (isdigit(temp_c))
-                return Token::Interger(-parseInt());
-            return Token::Minus();
-        case '+':
-            is_c_out_of_date = true;
-            return Token::Plus();
-        case '/':
-            is_c_out_of_date = true;
-            return Token::Div();
-        case '\n':
-            is_c_out_of_date = true;
-            offset=0;
-            ln++;
-            return Token::Nextline();
-        case '=':
-            is_c_out_of_date = true;
-            return Token::Eq();
-        case '<':
-            if ((temp_c = skipAndReturn()) == '=') {
-                is_c_out_of_date = true;
-                return Token::Le();
+    if (cin >> look_ahead) {
+        switch (look_ahead) {
+            case '(':
+                return Token::Lbr();
+            case ')':
+                return Token::Rbr();
+            case '+':
+                return Token::Plus();
+            case '-':
+                return Token::Minus();
+            case '*':
+                return Token::Mul();
+            case '/':
+                return Token::Div();
+            case '=':
+                return Token::Eq();
+            case '>':
+                cin.putback(look_ahead);
+            case '<': {
+                string op;
+                cin >> op;
+                if (op == "<")
+                    return Token::Lt();
+                else if (op == "<=")
+                    return Token::Le();
+                else if (op == ">")
+                    return Token::Gt();
+                else if (op == ">=")
+                    return Token::Ge();
+                else
+                    throw exception();
             }
+            default:
+                if (isdigit(look_ahead)) {
+                    cin.putback((look_ahead));
+                    int i;
+                    cin >> i;
+                    return Token::Interger(i);
+                } else if (isalpha((look_ahead)) || look_ahead == '_') {
+                    cin.putback((look_ahead));
+                    string buf;
+                    for (look_ahead = cin.get(); isalnum(look_ahead) || look_ahead == '_'; look_ahead = cin.get()) {
+                        if (look_ahead) buf.push_back(look_ahead);
+                    };
 
-            return Token::Lt();
-        case '>':
-            if ((temp_c = skipAndReturn()) == '=') {
-                is_c_out_of_date = true;
-                return Token::Ge();
-            }
+                    cin.putback(look_ahead);
 
-            return Token::Gt();
-        case EOF:
-            return Token::Eof();
+                    if (buf == "define")
+                        return Token::Def();
+                    else if (buf == "if")
+                        return Token::Cond();
+                    else if (buf == "true")
+                        return Token::Boolean(true);
+                    else if (buf == "false")
+                        return Token::Boolean(false);
+                    else if (buf == "and")
+                        return Token::And();
+                    else if (buf == "or")
+                        return Token::Or();
+                    else if (buf == "not")
+                        return Token::Not();
+                    else
+                        return Token::Identifier(buf);
 
-    }
+                };
 
-    //some identifier
-    if (isalpha(temp_c)||temp_c=='_') {
-        string buf;
-
-        while (isalnum(temp_c)||temp_c=='_') {
-            buf.push_back(temp_c);
-            temp_c = skipAndReturn();
         }
+    } else {
 
-        if (buf == "define")
-            return Token::Def();
-        else if (buf == "if")
-            return Token::Cond();
-        else if (buf == "true")
-            return Token::Boolean(true);
-        else if (buf == "false")
-            return Token::Boolean(false);
-        else if (buf == "and")
-            return Token::And();
-        else if (buf == "or")
-            return Token::Or();
-        else if (buf == "not")
-            return Token::Not();
-        else
-            return Token::Identifier(buf);
-    }
+        return Token::Eof();
+    };
 
-    if (isdigit(temp_c)) {
-        return Token::Interger(parseInt());
-    }
-
-    throw LexingError(ln,offset,"wierd token found");
 }
 
 
-LexingError::LexingError(int ln, int character, const string& message):line(ln),offset(character),
-    msg("LexingError as line "+to_string(ln)+",offset "+to_string(character)+":"+message)
-{}
+LexingError::LexingError(int ln, int character, const string &message) : line(ln), offset(character),
+                                                                         msg("LexingError as line " + to_string(ln) +
+                                                                             ",offset " + to_string(character) + ":" +
+                                                                             message) {}
 
-const char* LexingError::what() const noexcept {return msg.c_str();}
+const char *LexingError::what() const noexcept { return msg.c_str(); }

@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
+
+#add_subdirectory(GTest)
+
 project(CLisp)
 
 set(CMAKE_CXX_STANDARD 17)
