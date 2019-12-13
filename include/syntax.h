@@ -185,7 +185,6 @@ private:
 class Syntaxer{
     vector<variant<unique_ptr<Expr>,Token>>    operands;//记录中间结果
     vector<uint>                left_brackets;//记录遇到的左括号位置
-    Lexer                       input_stream;
 
     unique_ptr<Expr> reduce(uint);
 

@@ -80,15 +80,13 @@ private:
 };
 
 
+istream& operator>>(istream&,Token&);
+
 /*
  * 通过Lexer的实例将输入字符打散成词语流
  * Lexer作为临时的上下文使用
  * */
 class Lexer{
-    char temp_c;
-    bool is_c_out_of_date;
-    int ln;
-    int offset;
 
 public:
     Lexer();

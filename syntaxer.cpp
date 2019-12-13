@@ -5,7 +5,7 @@
 #include "syntax.h"
 
 //构建一个默认的Syntaxer
-Syntaxer::Syntaxer() : operands(), left_brackets(), input_stream() {}
+Syntaxer::Syntaxer() : operands(), left_brackets(){}
 
 
 //算数表达式的归约过程
@@ -192,7 +192,7 @@ unique_ptr<Expr> Syntaxer::parseExpr() {
     Token token=Token::Default();
 
     do {
-        token = input_stream.getToken();
+        cin>>token;
         switch (token.getTag()) {
             case Token::lbr:
                 //记录当前栈的大小

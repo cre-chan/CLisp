@@ -6,10 +6,10 @@
 #include <lexer.h>
 
 int main() {
-    Lexer cmd;
+    Token input=Token::Default();
     cout<<">>>";
     do{
-        auto input=cmd.getToken();
+        cin>>input;
         if (input.getTag()!=Token::TokenType::nextline)
             std::cout<<input<<" ";
         if (input.getTag()==Token::TokenType::nextline) cout<<input<<">>>";

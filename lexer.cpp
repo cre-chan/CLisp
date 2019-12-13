@@ -153,19 +153,100 @@ ostream &operator<<(ostream &out, const Token &self) {
     return out;
 }
 
+istream &operator>>(istream &in, Token &token) {
+
+    char look_ahead;
+
+    if (in >> look_ahead) {
+        switch (look_ahead) {
+            case '(':
+                token = Token::Lbr();
+                return in;
+            case ')':
+                token = Token::Rbr();
+                return in;
+            case '+':
+                token = Token::Plus();
+                return in;
+            case '-':
+                token = Token::Minus();
+                return in;
+            case '*':
+                token = Token::Mul();
+                return in;
+            case '/':
+                token = Token::Div();
+                return in;
+            case '=':
+                token = Token::Eq();
+                return in;
+            case '>':
+                cin.putback(look_ahead);
+            case '<': {
+                string op;
+                cin >> op;
+                if (op == "<")
+                    token = Token::Lt();
+                else if (op == "<=")
+                    token = Token::Le();
+                else if (op == ">")
+                    token = Token::Gt();
+                else if (op == ">=")
+                    token = Token::Ge();
+                else
+                    throw exception();
+
+                return in;
+            }
+            default:
+                if (isdigit(look_ahead)) {
+                    cin.putback((look_ahead));
+                    int i;
+                    cin >> i;
+                    token = Token::Interger(i);
+                } else if (isalpha((look_ahead)) || look_ahead == '_') {
+                    cin.putback((look_ahead));
+                    string buf;
+                    for (look_ahead = cin.get(); isalnum(look_ahead) || look_ahead == '_'; look_ahead = cin.get()) {
+                        if (look_ahead) buf.push_back(look_ahead);
+                    };
+
+                    cin.putback(look_ahead);
+
+                    if (buf == "define")
+                        token=Token::Def();
+                    else if (buf == "if")
+                        token=Token::Cond();
+                    else if (buf == "true")
+                        token=Token::Boolean(true);
+                    else if (buf == "false")
+                        token=Token::Boolean(false);
+                    else if (buf == "and")
+                        token=Token::And();
+                    else if (buf == "or")
+                        token=Token::Or();
+                    else if (buf == "not")
+                        token=Token::Not();
+                    else
+                        token=Token::Identifier(buf);
+
+                };
+                return in;
+
+        }
+    } else {
+
+        token=Token::Eof();
+    };
+
+    throw exception();
+}
+
 Token::Token() = default;
 
 Token Token::Default() {
     return Token();
 }
-
-
-/*
- * Lexer暂存一个上下文，用于读入
- *
- * */
-Lexer::Lexer() :
-        temp_c('\t'), is_c_out_of_date(true), ln(1), offset(0) {}
 
 Token Lexer::getToken() {
 
@@ -243,8 +324,10 @@ Token Lexer::getToken() {
         return Token::Eof();
     };
 
+    throw exception();
 }
 
+Lexer::Lexer() = default;
 
 LexingError::LexingError(int ln, int character, const string &message) : line(ln), offset(character),
                                                                          msg("LexingError as line " + to_string(ln) +
