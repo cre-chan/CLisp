@@ -16,9 +16,9 @@ int main() {
     auto prelude = SymbolTable<FuncSignature>::NIL();
     auto global_names = SymbolTable<string>::NIL();
 
-    while (true) {
-        Syntaxer temp;
-        unique_ptr<Expr> expr = temp.parseExpr();
+    unique_ptr<Expr> expr;
+
+    while (cin>>expr) {
 
         auto[expr1, name_map, somthing]=symantic_check(std::move(expr), prelude, "");
 

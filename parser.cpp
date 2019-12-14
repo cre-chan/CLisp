@@ -4,35 +4,8 @@
 #include "stdafx.h"
 #include "syntax.h"
 
-class Syntaxer{
-    vector<variant<unique_ptr<Expr>,Token>>    operands;//记录中间结果
-    vector<uint>                left_brackets;//记录遇到的左括号位置
-
-    unique_ptr<Expr> reduce(uint);
-
-    //归约不同形式算术表达式
-    unique_ptr<Expr> reduce_arith(
-            vector<variant<unique_ptr<Expr>,Token>>,
-            const std::function<unique_ptr<Expr>(vector<unique_ptr<Expr>>)>&
-    );
-
-    unique_ptr<Expr> reduce_binary(
-            vector<variant<unique_ptr<Expr>,Token>>,
-            const std::function<unique_ptr<Expr>(unique_ptr<Expr>,unique_ptr<Expr>)>&
-    );
-
-public:
-    Syntaxer();
-    unique_ptr<Expr> parseExpr();
-
-};
-
-//构建一个默认的Syntaxer
-Syntaxer::Syntaxer() : operands(), left_brackets() {}
-
-
 //算数表达式的归约过程
-unique_ptr<Expr> Syntaxer::reduce_arith(
+unique_ptr<Expr> reduce_arith(
         vector<variant<unique_ptr<Expr>, Token>> tempStack,
         const std::function<unique_ptr<Expr>(vector<unique_ptr<Expr>>)> &retType) {
     tempStack.pop_back();
@@ -47,7 +20,7 @@ unique_ptr<Expr> Syntaxer::reduce_arith(
 }
 
 
-unique_ptr<Expr> Syntaxer::reduce_binary(vector<variant<unique_ptr<Expr>, Token>> tempStack,
+unique_ptr<Expr> reduce_binary(vector<variant<unique_ptr<Expr>, Token>> tempStack,
                                          const std::function<unique_ptr<Expr>(unique_ptr<Expr>,
                                                                               unique_ptr<Expr>)> &retType) {
     tempStack.pop_back();
@@ -61,7 +34,7 @@ unique_ptr<Expr> Syntaxer::reduce_binary(vector<variant<unique_ptr<Expr>, Token>
 
 
 //移出一个括号并继续
-unique_ptr<Expr> Syntaxer::reduce(uint upper_bound) {
+unique_ptr<Expr> reduce(vector<variant<unique_ptr<Expr>, Token>> &operands) {
     vector<variant<unique_ptr<Expr>, Token>> tempStack;
     //todo:处理括号不对称的情况
 
@@ -212,9 +185,9 @@ unique_ptr<Expr> Syntaxer::reduce(uint upper_bound) {
 
 }
 
-unique_ptr<Expr> Syntaxer::parseExpr() {
+unique_ptr<Expr> parseExpr() {
     Token token = Token::Default();
-
+    vector<variant<unique_ptr<Expr>, Token>> operands;
     do {
         cin >> token;
         switch (token.getTag()) {
@@ -224,7 +197,7 @@ unique_ptr<Expr> Syntaxer::parseExpr() {
                 break;
             case Token::rbr: {
                 //遇到右括号则归约,并将归约结果放在最后
-                operands.emplace_back(reduce(operands.size()));
+                operands.emplace_back(reduce(operands));
                 break;
             }
                 //对于标点符号，原样保留符号
@@ -261,7 +234,7 @@ unique_ptr<Expr> Syntaxer::parseExpr() {
                 throw exception();
                 break;
         }
-    } while (operands.front().index()==1);
+    } while (operands.front().index() == 1);
 
     //从栈中移出最终结果，并清空栈
     auto ret = std::move(std::get<unique_ptr<Expr>>(operands.back()));
@@ -272,6 +245,6 @@ unique_ptr<Expr> Syntaxer::parseExpr() {
 }
 
 istream &operator>>(istream &in, unique_ptr<Expr> &a) {
-    a=Syntaxer().parseExpr();
+    a = parseExpr();
     return in;
 }

@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <forward_list>
 #include <algorithm>
+#include <clisp_utility.hpp>
 
 using namespace std;
 

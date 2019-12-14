@@ -9,7 +9,7 @@
 int main() {
     unique_ptr<Expr> ast;
     while (cout<<">>>",cin>>ast)
-        cout<<*ast<<endl;
+        cout<<ast<<endl;
 
     return 0;
 }
