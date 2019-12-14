@@ -181,8 +181,8 @@ istream &operator>>(istream &in, Token &token) {
                 token = Token::Eq();
                 return in;
             case '>':
-                cin.putback(look_ahead);
             case '<': {
+                cin.putback(look_ahead);
                 string op;
                 cin >> op;
                 if (op == "<")

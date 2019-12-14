@@ -180,28 +180,8 @@ private:
 };
 
 
+istream& operator>>(istream&,unique_ptr<Expr>&);
 
 
-class Syntaxer{
-    vector<variant<unique_ptr<Expr>,Token>>    operands;//记录中间结果
-    vector<uint>                left_brackets;//记录遇到的左括号位置
 
-    unique_ptr<Expr> reduce(uint);
-
-    //归约不同形式算术表达式
-    unique_ptr<Expr> reduce_arith(
-            vector<variant<unique_ptr<Expr>,Token>>,
-            const std::function<unique_ptr<Expr>(vector<unique_ptr<Expr>>)>&
-                    );
-
-    unique_ptr<Expr> reduce_binary(
-            vector<variant<unique_ptr<Expr>,Token>>,
-            const std::function<unique_ptr<Expr>(unique_ptr<Expr>,unique_ptr<Expr>)>&
-    );
-
-public:
-    Syntaxer();
-    unique_ptr<Expr> parseExpr();
-
-};
 #endif //LEXER_SYNTAX_H

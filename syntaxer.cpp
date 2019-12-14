@@ -4,8 +4,31 @@
 #include "stdafx.h"
 #include "syntax.h"
 
+class Syntaxer{
+    vector<variant<unique_ptr<Expr>,Token>>    operands;//记录中间结果
+    vector<uint>                left_brackets;//记录遇到的左括号位置
+
+    unique_ptr<Expr> reduce(uint);
+
+    //归约不同形式算术表达式
+    unique_ptr<Expr> reduce_arith(
+            vector<variant<unique_ptr<Expr>,Token>>,
+            const std::function<unique_ptr<Expr>(vector<unique_ptr<Expr>>)>&
+    );
+
+    unique_ptr<Expr> reduce_binary(
+            vector<variant<unique_ptr<Expr>,Token>>,
+            const std::function<unique_ptr<Expr>(unique_ptr<Expr>,unique_ptr<Expr>)>&
+    );
+
+public:
+    Syntaxer();
+    unique_ptr<Expr> parseExpr();
+
+};
+
 //构建一个默认的Syntaxer
-Syntaxer::Syntaxer() : operands(), left_brackets(){}
+Syntaxer::Syntaxer() : operands(), left_brackets() {}
 
 
 //算数表达式的归约过程
@@ -41,14 +64,15 @@ unique_ptr<Expr> Syntaxer::reduce_binary(vector<variant<unique_ptr<Expr>, Token>
 unique_ptr<Expr> Syntaxer::reduce(uint upper_bound) {
     vector<variant<unique_ptr<Expr>, Token>> tempStack;
     //todo:处理括号不对称的情况
-    uint prev = left_brackets.back();
-    left_brackets.pop_back();
 
-    for (auto i = upper_bound; i > prev; i--) {
-        //从操作数堆中移出操作数
-        tempStack.push_back(std::move(operands.back()));
+    for (auto element = std::move(operands.back());
+         element.index() != 1 || std::get<Token>(element).getTag() != Token::lbr; element = std::move(
+            operands.back())) {
+        tempStack.push_back(std::move(element));
         operands.pop_back();
     }
+
+    operands.pop_back();
 
     //将列表中第一位取出
     variant<unique_ptr<Expr>, Token> &oper = tempStack.back();
@@ -189,14 +213,14 @@ unique_ptr<Expr> Syntaxer::reduce(uint upper_bound) {
 }
 
 unique_ptr<Expr> Syntaxer::parseExpr() {
-    Token token=Token::Default();
+    Token token = Token::Default();
 
     do {
-        cin>>token;
+        cin >> token;
         switch (token.getTag()) {
             case Token::lbr:
                 //记录当前栈的大小
-                left_brackets.push_back(operands.size());
+                operands.emplace_back(token);
                 break;
             case Token::rbr: {
                 //遇到右括号则归约,并将归约结果放在最后
@@ -233,9 +257,11 @@ unique_ptr<Expr> Syntaxer::parseExpr() {
             case Token::nextline:
                 break;
             case Token::eof:
+                //跳出
+                throw exception();
                 break;
-        };
-    } while (!left_brackets.empty());
+        }
+    } while (operands.front().index()==1);
 
     //从栈中移出最终结果，并清空栈
     auto ret = std::move(std::get<unique_ptr<Expr>>(operands.back()));
@@ -243,4 +269,9 @@ unique_ptr<Expr> Syntaxer::parseExpr() {
 
 
     return std::move(ret);
+}
+
+istream &operator>>(istream &in, unique_ptr<Expr> &a) {
+    a=Syntaxer().parseExpr();
+    return in;
 }
