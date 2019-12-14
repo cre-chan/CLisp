@@ -62,8 +62,6 @@ Token Token::Div() { return Token(TokenType::div); }
 
 Token Token::Eof() { return Token(TokenType::eof); }
 
-Token Token::Nextline() { return Token(TokenType::nextline); }
-
 Token Token::Not() { return Token(TokenType::not_op); }
 
 Token Token::And() { return Token(TokenType::and_op); }
@@ -248,90 +246,4 @@ Token Token::Default() {
     return Token();
 }
 
-Token Lexer::getToken() {
 
-    char look_ahead;
-
-    if (cin >> look_ahead) {
-        switch (look_ahead) {
-            case '(':
-                return Token::Lbr();
-            case ')':
-                return Token::Rbr();
-            case '+':
-                return Token::Plus();
-            case '-':
-                return Token::Minus();
-            case '*':
-                return Token::Mul();
-            case '/':
-                return Token::Div();
-            case '=':
-                return Token::Eq();
-            case '>':
-                cin.putback(look_ahead);
-            case '<': {
-                string op;
-                cin >> op;
-                if (op == "<")
-                    return Token::Lt();
-                else if (op == "<=")
-                    return Token::Le();
-                else if (op == ">")
-                    return Token::Gt();
-                else if (op == ">=")
-                    return Token::Ge();
-                else
-                    throw exception();
-            }
-            default:
-                if (isdigit(look_ahead)) {
-                    cin.putback((look_ahead));
-                    int i;
-                    cin >> i;
-                    return Token::Interger(i);
-                } else if (isalpha((look_ahead)) || look_ahead == '_') {
-                    cin.putback((look_ahead));
-                    string buf;
-                    for (look_ahead = cin.get(); isalnum(look_ahead) || look_ahead == '_'; look_ahead = cin.get()) {
-                        if (look_ahead) buf.push_back(look_ahead);
-                    };
-
-                    cin.putback(look_ahead);
-
-                    if (buf == "define")
-                        return Token::Def();
-                    else if (buf == "if")
-                        return Token::Cond();
-                    else if (buf == "true")
-                        return Token::Boolean(true);
-                    else if (buf == "false")
-                        return Token::Boolean(false);
-                    else if (buf == "and")
-                        return Token::And();
-                    else if (buf == "or")
-                        return Token::Or();
-                    else if (buf == "not")
-                        return Token::Not();
-                    else
-                        return Token::Identifier(buf);
-
-                };
-
-        }
-    } else {
-
-        return Token::Eof();
-    };
-
-    throw exception();
-}
-
-Lexer::Lexer() = default;
-
-LexingError::LexingError(int ln, int character, const string &message) : line(ln), offset(character),
-                                                                         msg("LexingError as line " + to_string(ln) +
-                                                                             ",offset " + to_string(character) + ":" +
-                                                                             message) {}
-
-const char *LexingError::what() const noexcept { return msg.c_str(); }

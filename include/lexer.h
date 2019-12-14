@@ -56,7 +56,7 @@ public:
     static Token    Minus();        //-运算符
     static Token    Mul();          //*运算符
     static Token    Div();          ///运算符
-    static Token    Nextline();     //换行符，用于命令行提示
+    //换行符，用于命令行提示
     static Token    Eof();          //文件的结束
     static Token    Boolean(bool);  //布尔型字面量
     static Token    Eq();           //=运算符
@@ -82,29 +82,5 @@ private:
 
 istream& operator>>(istream&,Token&);
 
-/*
- * 通过Lexer的实例将输入字符打散成词语流
- * Lexer作为临时的上下文使用
- * */
-class Lexer{
-
-public:
-    Lexer();
-    Token getToken();
-};
-
-
-/*
- * 用于报告解析时发生的错误
- * */
-class LexingError:public exception{
-public:
-    int const line;
-    int const offset;
-    string const msg;
-    LexingError(int,int,const string&);
-    const char * what() const noexcept override;
-
-};
 
 #endif //CLISP_LEXER_H

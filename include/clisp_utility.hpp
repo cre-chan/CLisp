@@ -13,4 +13,6 @@ std::ostream& operator<<(std::ostream& out,std::unique_ptr<T>& a){
     return out<<*a;
 }
 
+
+
 #endif //SEMANTICS_CLISP_UTILITY_HPP

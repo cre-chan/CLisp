@@ -340,12 +340,6 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             auto &def_with = std::get<Expr::define_with_expr>(self.content);
             indentation(out, level) << "(" << endl;
             def_with.def_part->prettyPrint(out,level+1)<<" in"<<endl;
-//            indentation(out, level + 1) << "(";
-//            for (auto &id:def_with.def_part.arglist)
-//                out << id.name << ' ';
-//            out << ')' << endl;
-//            def_with.def_part.body->prettyPrint(out, level + 1);
-//            indentation(out, level) << "in" << endl;
             def_with.expr->prettyPrint(out, level + 1) << endl;
             indentation(out, level) << ')';
             return out;

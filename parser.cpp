@@ -21,8 +21,8 @@ unique_ptr<Expr> reduce_arith(
 
 
 unique_ptr<Expr> reduce_binary(vector<variant<unique_ptr<Expr>, Token>> tempStack,
-                                         const std::function<unique_ptr<Expr>(unique_ptr<Expr>,
-                                                                              unique_ptr<Expr>)> &retType) {
+                               const std::function<unique_ptr<Expr>(unique_ptr<Expr>,
+                                                                    unique_ptr<Expr>)> &retType) {
     tempStack.pop_back();
     auto op1 = std::get<unique_ptr<Expr>>(std::move(tempStack.back()));
     tempStack.pop_back();
@@ -32,6 +32,79 @@ unique_ptr<Expr> reduce_binary(vector<variant<unique_ptr<Expr>, Token>> tempStac
     return retType(std::move(op1), std::move(op2));
 }
 
+unique_ptr<Expr>
+reduce_def(vector<variant<unique_ptr<Expr>, Token>> &tempStack, variant<unique_ptr<Expr>, Token> &oper) {
+    auto def = move(get<unique_ptr<Expr>>(oper));
+    tempStack.pop_back();
+    vector<unique_ptr<Expr>> exprs;
+
+    exprs.push_back(move(def));
+
+    while (get<unique_ptr<Expr>>(tempStack.back())->getTag() == Expr::def_func ||
+           get<unique_ptr<Expr>>(tempStack.back())->getTag() == Expr::def_variable) {
+        exprs.push_back(move(get<unique_ptr<Expr>>(tempStack.back())));
+        tempStack.pop_back();
+    }
+
+    auto expr_body = move(get<unique_ptr<Expr>>(tempStack.back()));
+    tempStack.pop_back();
+    auto def_with = Expr::DefWithExpr(move(exprs.back()), move(expr_body));
+    exprs.pop_back();
+    while (!exprs.empty()) {
+        def_with = Expr::DefWithExpr(move(exprs.back()), move(def_with));
+        exprs.pop_back();
+    }
+    return move(def_with);
+}
+
+unique_ptr<Expr> reduce_def_with(vector<variant<unique_ptr<Expr>, Token>> &tempStack) {
+    tempStack.pop_back();
+    auto arglist = move(get<unique_ptr<Expr>>(tempStack.back()));
+    tempStack.pop_back();
+
+    if (arglist->getTag() == Expr::id) {
+        auto expr_body = move(get<unique_ptr<Expr>>(tempStack.back()));
+        auto variable_name = move(get<Expr::id_expr>(*(*arglist)));
+        tempStack.pop_back();
+        return Expr::DefValExpr(variable_name.name, move(expr_body));
+    } else if (arglist->getTag() == Expr::apply) {
+        vector<unique_ptr<Expr>> arguments = move(get<Expr::apply_expr>(*(*arglist)).list);
+        vector<Expr::id_expr> arg_names;
+        auto expr_body = move(get<unique_ptr<Expr>>(tempStack.back()));
+        tempStack.pop_back();
+        for (auto &id:arguments) {
+            //将ID表达式移出
+            Expr::id_expr variable_name = move(get<Expr::id_expr>(*(*id)));
+            arg_names.push_back(variable_name);
+        }
+        arguments.clear();
+        return Expr::DefExpr(move(arg_names), move(expr_body));
+    } else
+        throw exception();
+}
+
+unique_ptr<Expr>
+reduce_apply(vector<variant<unique_ptr<Expr>, Token>> &tempStack, variant<unique_ptr<Expr>, Token> &oper) {
+    vector<unique_ptr<Expr>> arglist;
+    arglist.push_back(move(get<unique_ptr<Expr>>(oper)));
+    tempStack.pop_back();
+    while (!tempStack.empty()) {
+        arglist.push_back(move(get<unique_ptr<Expr>>(tempStack.back())));
+        tempStack.pop_back();
+    }
+    return Expr::ApplyExpr(move(arglist));
+}
+
+unique_ptr<Expr> reduce_if(vector<variant<unique_ptr<Expr>, Token>> &tempStack) {
+                tempStack.pop_back();
+                auto cond = move(get<unique_ptr<Expr>>(tempStack.back()));
+                tempStack.pop_back();
+                auto expr1 = move(get<unique_ptr<Expr>>(tempStack.back()));
+                tempStack.pop_back();
+                auto expr2 = move(get<unique_ptr<Expr>>(tempStack.back()));
+                tempStack.pop_back();
+                return Expr::IfExpr(move(cond), move(expr1), move(expr2));
+            }
 
 //移出一个括号并继续
 unique_ptr<Expr> reduce(vector<variant<unique_ptr<Expr>, Token>> &operands) {
@@ -53,43 +126,11 @@ unique_ptr<Expr> reduce(vector<variant<unique_ptr<Expr>, Token>> &operands) {
     if (oper.index() == 1) {
         //若该操作数是一个Token
         switch (std::get<Token>(oper).getTag()) {
-
             //排除掉会直接转化为expr的token
-            case Token::def: {
-                tempStack.pop_back();
-                auto arglist = std::move(std::get<unique_ptr<Expr>>(tempStack.back()));
-                tempStack.pop_back();
-
-                if (arglist->getTag() == Expr::expr_type::id) {
-                    auto expr_body = std::move(std::get<unique_ptr<Expr>>(tempStack.back()));
-                    auto variable_name = std::move(std::get<Expr::id_expr>(*(*arglist)));
-                    tempStack.pop_back();
-                    return Expr::DefValExpr(variable_name.name, std::move(expr_body));
-                } else if (arglist->getTag() == Expr::expr_type::apply) {
-                    vector<unique_ptr<Expr>> arguments = std::move(std::get<Expr::apply_expr>(*(*arglist)).list);
-                    vector<Expr::id_expr> arg_names;
-                    auto expr_body = std::move(std::get<unique_ptr<Expr>>(tempStack.back()));
-                    tempStack.pop_back();
-                    for (auto &id:arguments) {
-                        //将ID表达式移出
-                        Expr::id_expr variable_name = std::move(std::get<Expr::id_expr>(*(*id)));
-                        arg_names.push_back(variable_name);
-                    }
-                    arguments.clear();
-                    return Expr::DefExpr(std::move(arg_names), std::move(expr_body));
-                } else
-                    throw exception();
-            }
-            case Token::cond: {
-                tempStack.pop_back();
-                auto cond = std::move(std::get<unique_ptr<Expr>>(tempStack.back()));
-                tempStack.pop_back();
-                auto expr1 = std::move(std::get<unique_ptr<Expr>>(tempStack.back()));
-                tempStack.pop_back();
-                auto expr2 = std::move(std::get<unique_ptr<Expr>>(tempStack.back()));
-                tempStack.pop_back();
-                return Expr::IfExpr(std::move(cond), std::move(expr1), std::move(expr2));
-            }
+            case Token::def:
+                return reduce_def_with(tempStack);
+            case Token::cond:
+                return reduce_if(tempStack);
             case Token::plus:
                 return reduce_arith(std::move(tempStack), Expr::PlusExpr);
             case Token::minus:
@@ -122,48 +163,15 @@ unique_ptr<Expr> reduce(vector<variant<unique_ptr<Expr>, Token>> &operands) {
                 throw exception();
         }
     } else {
-
-
         switch (std::get<unique_ptr<Expr>>(oper)->getTag()) {
-
             case Expr::cond:
             case Expr::id:
             case Expr::def_with_expr:
-            case Expr::apply: {
-                vector<unique_ptr<Expr>> arglist;
-                arglist.push_back(std::move(std::get<unique_ptr<Expr>>(oper)));
-                tempStack.pop_back();
-                while (!tempStack.empty()) {
-                    arglist.push_back(std::move(std::get<unique_ptr<Expr>>(tempStack.back())));
-                    tempStack.pop_back();
-                }
-                return Expr::ApplyExpr(std::move(arglist));
-            }
+            case Expr::apply:
+                return reduce_apply(tempStack, oper);
             case Expr::def_variable:
-            case Expr::def_func: {
-                auto def = std::move(std::get<unique_ptr<Expr>>(oper));
-                tempStack.pop_back();
-                vector<unique_ptr<Expr>> exprs;
-
-                exprs.push_back(std::move(def));
-
-                while (std::get<unique_ptr<Expr>>(tempStack.back())->getTag() == Expr::def_func ||
-                       std::get<unique_ptr<Expr>>(tempStack.back())->getTag() == Expr::def_variable) {
-                    exprs.push_back(std::move(std::get<unique_ptr<Expr>>(tempStack.back())));
-                    tempStack.pop_back();
-                }
-
-                auto expr_body = std::move(std::get<unique_ptr<Expr>>(tempStack.back()));
-                tempStack.pop_back();
-                auto def_with = Expr::DefWithExpr(std::move(exprs.back()), std::move(expr_body));
-                exprs.pop_back();
-                while (!exprs.empty()) {
-                    def_with = Expr::DefWithExpr(std::move(exprs.back()), std::move(def_with));
-                    exprs.pop_back();
-                }
-                return std::move(def_with);
-            }
-
+            case Expr::def_func:
+                return reduce_def(tempStack, oper);
                 //基础类型不是applicative的
             case Expr::eq:
             case Expr::le:
@@ -180,27 +188,23 @@ unique_ptr<Expr> reduce(vector<variant<unique_ptr<Expr>, Token>> &operands) {
                 //todo:错误处理
                 throw exception();//出现语法错误
         }
-
     }
 
 }
 
-unique_ptr<Expr> parseExpr() {
+
+istream &operator>>(istream &in, unique_ptr<Expr> &a) {
     Token token = Token::Default();
     vector<variant<unique_ptr<Expr>, Token>> operands;
     do {
-        cin >> token;
+        in >> token;
         switch (token.getTag()) {
-            case Token::lbr:
-                //记录当前栈的大小
-                operands.emplace_back(token);
-                break;
-            case Token::rbr: {
+            case Token::rbr:
                 //遇到右括号则归约,并将归约结果放在最后
                 operands.emplace_back(reduce(operands));
                 break;
-            }
                 //对于标点符号，原样保留符号
+            case Token::lbr:
             case Token::eq:
             case Token::le:
             case Token::ge:
@@ -232,19 +236,13 @@ unique_ptr<Expr> parseExpr() {
             case Token::eof:
                 //跳出
                 throw exception();
-                break;
         }
     } while (operands.front().index() == 1);
 
     //从栈中移出最终结果，并清空栈
-    auto ret = std::move(std::get<unique_ptr<Expr>>(operands.back()));
+    a = std::move(std::get<unique_ptr<Expr>>(operands.back()));
     operands.pop_back();
 
 
-    return std::move(ret);
-}
-
-istream &operator>>(istream &in, unique_ptr<Expr> &a) {
-    a = parseExpr();
     return in;
 }
