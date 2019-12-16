@@ -3,6 +3,7 @@
 //
 
 #include <stdafx.h>
+#include <clisp_execption.h>
 #include <lexer.h>
 
 int main() {

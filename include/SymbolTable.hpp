@@ -12,7 +12,6 @@
 
 template<class V>
 class SymbolTable {
-
     string symbol_name;
     shared_ptr<V> value;
     shared_ptr<SymbolTable> left, right;

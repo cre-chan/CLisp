@@ -1,4 +1,5 @@
 #include <stdafx.h>
+#include <clisp_execption.h>
 #include <lexer.h>
 
 //
@@ -156,6 +157,7 @@ istream &operator>>(istream &in, Token &token) {
     char look_ahead;
 
     if (in >> look_ahead) {
+
         switch (look_ahead) {
             case '(':
                 token = Token::Lbr();
@@ -192,7 +194,7 @@ istream &operator>>(istream &in, Token &token) {
                 else if (op == ">=")
                     token = Token::Ge();
                 else
-                    throw exception();
+                    throw InvalidToken(in, "<, >, >= or <=");
 
                 return in;
             }
@@ -207,40 +209,46 @@ istream &operator>>(istream &in, Token &token) {
                     string buf;
                     for (look_ahead = cin.get(); isalnum(look_ahead) || look_ahead == '_'; look_ahead = cin.get()) {
                         if (look_ahead) buf.push_back(look_ahead);
-                    };
+                    }
 
                     cin.putback(look_ahead);
 
                     if (buf == "define")
-                        token=Token::Def();
+                        token = Token::Def();
                     else if (buf == "if")
-                        token=Token::Cond();
+                        token = Token::Cond();
                     else if (buf == "true")
-                        token=Token::Boolean(true);
+                        token = Token::Boolean(true);
                     else if (buf == "false")
-                        token=Token::Boolean(false);
+                        token = Token::Boolean(false);
                     else if (buf == "and")
-                        token=Token::And();
+                        token = Token::And();
                     else if (buf == "or")
-                        token=Token::Or();
+                        token = Token::Or();
                     else if (buf == "not")
-                        token=Token::Not();
+                        token = Token::Not();
                     else
-                        token=Token::Identifier(buf);
+                        token = Token::Identifier(buf);
 
-                };
+                } else {
+                    //当读取到一个非数字，下划线，字母的符号时，报告不可识别字符错误
+                    throw UnrecognizedCharacter(look_ahead, in);
+                }
                 return in;
 
         }
-    } else {
+    }
 
-        token=Token::Eof();
-    };
+    token = Token::Eof();
 
-    throw exception();
 }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cppcoreguidelines-pro-type-member-init"
+
 Token::Token() = default;
+
+#pragma clang diagnostic pop
 
 Token Token::Default() {
     return Token();
