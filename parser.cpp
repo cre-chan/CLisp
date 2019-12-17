@@ -256,7 +256,7 @@ istream &operator>>(istream &in, unique_ptr<Expr> &a) {
                 break;
             case Token::eof:
                 //跳出
-                throw exception();
+                throw NormalExit();
         }
     } while (operands.front().index() == 1);
 

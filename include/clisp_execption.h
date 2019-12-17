@@ -78,9 +78,17 @@ public:
 class ExpectingIdOrArglist:
         public ClispError{
 public:
-    ExpectingIdOrArglist(istream &istream);
+    explicit ExpectingIdOrArglist(istream &istream);
 
     const string info() const noexcept override;
+};
+
+class NormalExit:
+        public exception{
+public:
+    const char *what() const noexcept override;
+
+    NormalExit();
 };
 
 #endif //SEMANTICS_CLISP_EXECPTION_H

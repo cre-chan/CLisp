@@ -1,2 +1,4 @@
 cmake-build-*/*
 .idea/*
+testcases/ill_formed/*.log
+testcases/valid_programs/*.log

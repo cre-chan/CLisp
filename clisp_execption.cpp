@@ -62,3 +62,9 @@ ExpectingIdOrArglist::ExpectingIdOrArglist(istream &istream) : ClispError(istrea
 const string ExpectingIdOrArglist::info() const noexcept {
     return "Expecting identifier or argument list.";
 }
+
+NormalExit::NormalExit() {}
+
+const char *NormalExit::what() const noexcept {
+    return "Thank you for using CLisp";
+}

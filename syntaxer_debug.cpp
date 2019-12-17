@@ -14,7 +14,10 @@ int main() {
             cin>>ast;
             cout << ast << endl;
         }catch(const ClispError& e){
-            cout<<e.info()<<endl;
+            cerr<<e.info()<<endl;
+        }catch(NormalExit& err){
+            cout<<err.what()<<endl;
+            break;
         }
 
 
