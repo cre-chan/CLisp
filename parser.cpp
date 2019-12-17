@@ -256,7 +256,10 @@ istream &operator>>(istream &in, unique_ptr<Expr> &a) {
                 break;
             case Token::eof:
                 //跳出
-                throw NormalExit();
+                if (operands.empty())
+                    throw NormalExit();
+                else
+                    throw UnexpectedEOF(in);
         }
     } while (operands.front().index() == 1);
 

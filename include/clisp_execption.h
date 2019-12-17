@@ -91,4 +91,12 @@ public:
     NormalExit();
 };
 
+class UnexpectedEOF:
+        public  ClispError{
+public:
+    explicit UnexpectedEOF(istream &istream);
+
+    const string info() const noexcept override;
+};
+
 #endif //SEMANTICS_CLISP_EXECPTION_H

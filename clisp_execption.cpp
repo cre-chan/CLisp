@@ -68,3 +68,9 @@ NormalExit::NormalExit() {}
 const char *NormalExit::what() const noexcept {
     return "Thank you for using CLisp";
 }
+
+UnexpectedEOF::UnexpectedEOF(istream &istream) : ClispError(istream) {}
+
+const string UnexpectedEOF::info() const noexcept {
+    return "Unexpected end of file.";
+}
