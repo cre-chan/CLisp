@@ -1,1 +1,9 @@
-(define y 5)
+# 基本值类型
+
+100
+
+-2
+
+true
+
+false

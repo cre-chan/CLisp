@@ -90,6 +90,8 @@ unique_ptr<Expr> reduce_def(vector<variant<unique_ptr<Expr>, Token>> &tempStack,
         auto expr_body = yield_expr_from(tempStack, in);
         for (auto &id:arguments) {
             //将ID表达式移出
+            if (id->getTag()!=Expr::id)
+                throw ExpectingIdOrArglist(in);
             Expr::id_expr variable_name = move(get<Expr::id_expr>(*(*id)));
             arg_names.push_back(variable_name);
         }
@@ -178,6 +180,8 @@ unique_ptr<Expr> reduce(vector<variant<unique_ptr<Expr>, Token>> &operands, istr
             case Token::or_op:
                 return reduce_binary(std::move(tempStack), Expr::OrExpr, in);
             case Token::not_op: {
+                if (tempStack.size()!=1)
+                    throw ExpectingOperands(in,1);
                 auto expr = yield_expr_from(tempStack, in);
                 return Expr::NegExpr(std::move(expr));
             }

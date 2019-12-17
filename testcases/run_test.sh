@@ -13,9 +13,8 @@ function run_tests_in () {
     do
         logfile="${file}.log"
         total=`expr ${total} + 1`
-        ${parser}  < ${file} 2> ${logfile} 1> /dev/null
-        success=$?
-        err=$(cat ${logfile})
+        ${parser}  < ${file} 1> ${logfile} 2> /tmp/ast
+        err=$(cat "/tmp/ast")
         #如果该文件未报错，则提示
         if [[ ${2} == expect_error ]]
         then
@@ -28,6 +27,7 @@ function run_tests_in () {
          else
             if [[ "${#err}" != 0 ]]
             then
+                echo err
                 echo "Expecting no error in ${file} while error(s) reported."
             else
                 tests_passed=`expr ${tests_passed} + 1`
