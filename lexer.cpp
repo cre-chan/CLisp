@@ -169,7 +169,14 @@ istream &operator>>(istream &in, Token &token) {
                 token = Token::Plus();
                 return in;
             case '-':
-                token = Token::Minus();
+                if (isdigit(in.peek())) {
+                    cin.putback(look_ahead);
+                    int temp;
+                    in>>temp;
+                    token=Token::Interger(temp);
+                }else {
+                    token = Token::Minus();
+                }
                 return in;
             case '*':
                 token = Token::Mul();
@@ -198,6 +205,10 @@ istream &operator>>(istream &in, Token &token) {
 
                 return in;
             }
+            case '#':
+                in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                token = Token::Comment();
+                return in;
             default:
                 if (isdigit(look_ahead)) {
                     cin.putback((look_ahead));
@@ -252,6 +263,10 @@ Token::Token() = default;
 
 Token Token::Default() {
     return Token();
+}
+
+Token Token::Comment() {
+    return Token(comment);
 }
 
 

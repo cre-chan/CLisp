@@ -34,7 +34,8 @@ public:
         and_op,
         or_op,
         not_op,
-        eof
+        eof,
+        comment
     };
 
     TokenType   getTag() const;
@@ -55,8 +56,7 @@ public:
     static Token    Plus();         //+运算符
     static Token    Minus();        //-运算符
     static Token    Mul();          //*运算符
-    static Token    Div();          ///运算符
-    //换行符，用于命令行提示
+    static Token    Div();          //运算符
     static Token    Eof();          //文件的结束
     static Token    Boolean(bool);  //布尔型字面量
     static Token    Eq();           //=运算符
@@ -68,6 +68,7 @@ public:
     static Token    Or();           //or运算符
     static Token    Not();          //not 运算符
     static Token    Default();
+    static Token    Comment();
 private:
     TokenType   tag;
     variant<monostate,int,string,bool> content;

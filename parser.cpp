@@ -254,6 +254,8 @@ istream &operator>>(istream &in, unique_ptr<Expr> &a) {
                 break;
             case Token::nextline:
                 break;
+            case Token::comment:
+                break;//无视注释
             case Token::eof:
                 //跳出
                 if (operands.empty())
@@ -261,7 +263,7 @@ istream &operator>>(istream &in, unique_ptr<Expr> &a) {
                 else
                     throw UnexpectedEOF(in);
         }
-    } while (operands.front().index() == 1);
+    } while (operands.empty() || operands.front().index() == 1);
 
     //从栈中移出最终结果，并清空栈
     a = yield_expr_from(operands, in);

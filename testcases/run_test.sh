@@ -14,6 +14,7 @@ function run_tests_in () {
         logfile="${file}.log"
         total=`expr ${total} + 1`
         ${parser}  < ${file} 2> ${logfile} 1> /dev/null
+        success=$?
         err=$(cat ${logfile})
         #如果该文件未报错，则提示
         if [[ ${2} == expect_error ]]
