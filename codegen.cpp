@@ -87,12 +87,10 @@ Commands code_gen(unique_ptr<Expr> inputExpr) {
         case Expr::apply: {
             auto[plist]=move(get<Expr::apply_expr_t>(**inputExpr));
 
-            for (auto cur = plist.rbegin(); cur != plist.rend(); cur++)
+            for (auto cur = plist.begin()+1; cur != plist.end(); cur++)
                 merge(ret, code_gen(move(*cur)));
 
-
-//            ret.emplace_back(Operator{Operator::call,"call"});
-//            ret.emplace_back(Value{false,var_name});
+            merge(ret,code_gen(move(plist.front())));
             break;
         }
 //        case Expr::def_func:
