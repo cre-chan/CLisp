@@ -9,6 +9,22 @@
 #include "codegen.h"
 
 
+void print_exec(const Commands& executable){
+    for (auto &i:executable) {
+        switch (i.index()) {
+            case 0:
+                cout << get<0>(i) << ' ';
+                break;
+            case 1:
+                cout << get<1>(i) << ' ';
+                break;
+        }
+    }
+
+    cout << endl;
+}
+
+
 
 int main(){
     auto prelude=SymbolTable<FuncSignature>::NIL();
@@ -22,20 +38,14 @@ int main(){
         if (result_expr) {
             cout << *result_expr << endl;
 
-            auto exectubable = code_gen(std::move(result_expr));
+            auto executable = code_gen(std::move(result_expr));
 
-            for (auto &i:exectubable) {
-                switch (i.index()) {
-                    case 0:
-                        cout << get<0>(i) << ' ';
-                        break;
-                    case 1:
-                        cout << get<1>(i) << ' ';
-                        break;
-                }
-            }
+            print_exec(executable);
+        }
 
-            cout << endl;
+        for(auto &[name,code]:code_gen(move(defs))){
+            cout<<name<<':'<<endl;
+            print_exec(code);
         }
     }
 

@@ -183,3 +183,14 @@ ostream &operator<<(ostream &os, const Value &value) {
     }
     return os;
 }
+
+FuncDefsLow code_gen(FuncDefs defs) {
+    FuncDefsLow ret;
+
+    for(auto &def:defs){
+        auto [name,defexpr]=move(def);
+        ret.push_front(pair<GlobalName,Commands>(name,code_gen(move(defexpr))));
+    }
+
+    return ret;
+}

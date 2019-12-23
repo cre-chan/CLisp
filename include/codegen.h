@@ -46,5 +46,6 @@ using Commands=vector<Term>;
 using FuncDefsLow=forward_list<pair<GlobalName ,Commands >>;
 
 Commands code_gen(unique_ptr<Expr>);
+FuncDefsLow code_gen(FuncDefs);
 
 #endif //CODEGEN_CODEGEN_H
