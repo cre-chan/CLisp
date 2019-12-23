@@ -147,6 +147,7 @@ ostream &operator<<(ostream &out, const Token &self) {
         case TokenType::eq:
             out << "eq";
             break;
+        case Token::comment:break;
     }
 
     return out;
@@ -251,11 +252,9 @@ istream &operator>>(istream &in, Token &token) {
     }
 
     token = Token::Eof();
-
+    return in;
 }
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "cppcoreguidelines-pro-type-member-init"
 
 Token::Token() = default;
 

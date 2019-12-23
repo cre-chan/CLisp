@@ -4,6 +4,7 @@
 
 
 #include "stdafx.h"
+#include "clisp_utility.hpp"
 #include "lexer.h"
 #include "syntax.h"
 #include "SymbolTable.hpp"
@@ -20,16 +21,15 @@ int main() {
 
     while (cin>>expr) {
 
-        auto[expr1, name_map, somthing]=symantic_check(std::move(expr), prelude, "");
+        auto[expr1, name_map, definitions]=symantic_check(std::move(expr), prelude, "");
 
         if (expr1)
             cout << *expr1 << endl;
 
-//        cout<<*name_map<<endl;
-
-//        prelude=name_map;
-//        global_names=global_names+name_map;
-
+        for (const auto &def:definitions) {
+            cout << def.first << ':' << endl;
+            cout << *def.second << endl;
+        }
     }
 
     return 0;

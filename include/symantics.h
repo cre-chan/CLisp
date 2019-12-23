@@ -17,15 +17,22 @@ struct FuncSignature {
     std::forward_list<string> argnames;
 };
 
+using ExprModified=Expr;
+using ScopeModifier=const string&;
+using GlobalName=string;
+using FuncDefs=forward_list<pair<GlobalName ,unique_ptr<ExprModified >>>;
 
 using ResultType=std::tuple<
-        unique_ptr<Expr>,
+        unique_ptr<ExprModified >,
         shared_ptr<SymbolTable<FuncSignature>>,
-        shared_ptr<SymbolTable<Expr>>
+        FuncDefs
 >;
 
 //返回一个(Optional<Expr>,local_name_to_func_signature, global_name_to_modified_ast)
-ResultType
-symantic_check(unique_ptr<Expr>, const shared_ptr<SymbolTable<FuncSignature>> &, const string &);
+tuple<
+        unique_ptr<ExprModified >,
+        shared_ptr<SymbolTable<FuncSignature>>,
+        FuncDefs
+>symantic_check(unique_ptr<Expr>, const shared_ptr<SymbolTable<FuncSignature>> &, ScopeModifier);
 
 #endif //SYMANTICS_SYMANTICS_H

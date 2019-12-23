@@ -8,7 +8,7 @@
 #include "clisp_execption.h"
 
 UnrecognizedCharacter::UnrecognizedCharacter(char c, istream &in) :
-        ClispError(in), invalid_char(c) {
+        LexingError(in), invalid_char(c) {
 }
 
 const string UnrecognizedCharacter::info() const noexcept {
@@ -20,7 +20,7 @@ ClispError::ClispError(istream &in) :
     in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
-InvalidToken::InvalidToken(istream &istream, string tok) : ClispError(istream), tok_name(std::move(tok)) {}
+InvalidToken::InvalidToken(istream &istream, string tok) : LexingError(istream), tok_name(std::move(tok)) {}
 
 const string InvalidToken::info() const noexcept {
     return "Invalid token found. Did you mean "+tok_name+"?";
@@ -74,3 +74,5 @@ UnexpectedEOF::UnexpectedEOF(istream &istream) : ClispError(istream) {}
 const string UnexpectedEOF::info() const noexcept {
     return "Unexpected end of file.";
 }
+
+LexingError::LexingError(istream &istream) : ClispError(istream) {}

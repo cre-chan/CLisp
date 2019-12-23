@@ -14,9 +14,16 @@ public:
     virtual const string info() const noexcept =0;
 };
 
+
+class LexingError:
+    public ClispError{
+public:
+    LexingError(istream &istream);
+};
+
 //用于标识不合法的字符
 class UnrecognizedCharacter :
-        public ClispError {
+        public LexingError {
     char invalid_char;
 public:
     UnrecognizedCharacter(char,istream&);
@@ -24,8 +31,10 @@ public:
     const string info() const noexcept override;
 };
 
+
+
 class InvalidToken:
-        public ClispError{
+        public LexingError{
     string tok_name;
 public:
     InvalidToken(istream &istream,string  tok);

@@ -21,7 +21,7 @@ check_relation(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature
     return ResultType(
             retType(std::move(expr1), std::move(expr2)),
             env,
-            expr1_symbols + expr2_symbols
+            std::move(expr1_symbols) + std::move(expr2_symbols)
     );
 }
 
@@ -35,7 +35,7 @@ check_cond(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &
 
     return ResultType(
             Expr::IfExpr(std::move(predicate), std::move(expr1), std::move(expr2)), env,
-            pred_symbols + expr1_symbols + expr2_symbols);
+            std::move(pred_symbols) + std::move(expr1_symbols) + std::move(expr2_symbols));
 }
 
 
@@ -60,11 +60,13 @@ check_def(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &e
     auto func_env = env->insert(local_name, std::make_shared<FuncSignature>(
             FuncSignature{global_name, std::move(arg_names)}));
 
-    auto[expr1, a, symbol_table]=symantic_check(std::move(body), func_env, name_modifier + "@" + local_name);
+    auto[expr1, a, fundefs]=symantic_check(std::move(body), func_env, name_modifier + "@" + local_name);
+
+    fundefs.push_front(pair<GlobalName ,unique_ptr<ExprModified >>(global_name,std::move(expr1)));
 
     //define表达式不产生可执行语句，往自己所处环境里加入自己的名字，并将自身提升至全局符号
     return ResultType(nullptr, func_env,
-                      symbol_table->insert(global_name, make_shared<Expr>(std::move(*expr1))));
+                      std::move(fundefs));
 }
 
 
@@ -73,11 +75,11 @@ check_arith(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> 
             const std::function<unique_ptr<Expr>(vector<unique_ptr<Expr>>)> &arith_type) {
 
     auto[t, arglist]=std::move(std::get<Expr::arith_expr>(*(*expr)));
-    auto symbol_table = SymbolTable<Expr>::NIL();
+    auto symbol_table = FuncDefs();
 
     for (auto &item:arglist) {
         auto[expr, a, symbols]=symantic_check(std::move(item), env, name_modifier);
-        symbol_table = symbol_table + symbols;
+        symbol_table = std::move(symbol_table) + std::move(symbols);
         item = std::move(expr);
     }
 
@@ -85,29 +87,29 @@ check_arith(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> 
 }
 
 ResultType
-check_id(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &env, const string &name_modifier) {
+check_id(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &env, ScopeModifier name_modifier) {
     try {
         //确认当前id是否为某函数的名字，如果是，此处引用应使用mangle后的名字
         auto &[id_name]=std::get<Expr::id_expr>(*(*expr));
-        return ResultType(Expr::IdExpr(env->find(id_name)->global_name), env, SymbolTable<Expr>::NIL());
+        return ResultType(Expr::IdExpr(env->find(id_name)->global_name), env, FuncDefs());
     } catch (runtime_error &) {
         //如果没有找到该变量，则视其为全局符号，在调用时确认该符号是否在全局环境里
-        return ResultType(std::move(expr), env, SymbolTable<Expr>::NIL());
+        return ResultType(std::move(expr), env, FuncDefs());
     }
 }
 
 
 ResultType
-check_apply(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &env, const string &name_modifier) {
+check_apply(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &env, ScopeModifier name_modifier) {
 
     //将参数列表移出来
     auto[arglist]=std::move(std::get<Expr::apply_expr>(*(*expr)));
-    auto symbol_table = SymbolTable<Expr>::NIL();
+    auto symbol_table = FuncDefs();
     auto count = 0;
     for (auto &item:arglist) {
         //通过为每个表达式开一个虚拟scope,防止不同操作子的define with 子句的符号被提升到相同全局名
         auto[expr, a, symbols]=symantic_check(std::move(item), env, name_modifier + '@' + to_string(count));
-        symbol_table = symbol_table + symbols;
+        symbol_table = std::move(symbol_table) + std::move(symbols);
         item = std::move(expr);
         count++;
     }
@@ -121,7 +123,7 @@ check_var_def(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>
 
     auto[expr_after_modify, new_env, tbl]=symantic_check(std::move(value), env, name_modifier);
 
-    return ResultType(Expr::DefValExpr(var_name, std::move(expr_after_modify)), env, tbl);
+    return ResultType(Expr::DefValExpr(var_name, std::move(expr_after_modify)), env, std::move(tbl));
 }
 
 ResultType
@@ -136,10 +138,10 @@ check_def_with_expr(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSign
 
     //返回一个处理过不带函数定义的表达式，不给所处环境增加新符号，同时将定义与表达式体里的符号返回
     if (!obsolete1)
-        return ResultType(std::move(result_expr), env, new_symbols + result_symbols);
+        return ResultType(std::move(result_expr), env, std::move(new_symbols) + std::move(result_symbols));
     else
         return ResultType(Expr::DefWithExpr(std::move(obsolete1), std::move(result_expr)), env,
-                          new_symbols + result_symbols);
+                          std::move(new_symbols) + std::move(result_symbols));
 }
 
 ResultType
@@ -160,9 +162,9 @@ symantic_check(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature
         case Expr::id:
             return check_id(std::move(expr), env, name_modifier);
         case Expr::boolean:
-            return ResultType(std::move(expr), env, SymbolTable<Expr>::NIL());
+            return ResultType(std::move(expr), env, FuncDefs());
         case Expr::interger:
-            return ResultType(std::move(expr), env, SymbolTable<Expr>::NIL());
+            return ResultType(std::move(expr), env, FuncDefs());
         case Expr::apply:
             return check_apply(std::move(expr), env, name_modifier);
         case Expr::def_func:
