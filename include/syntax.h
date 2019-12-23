@@ -16,43 +16,43 @@ using namespace std;
 class Expr {
 public:
     // (if cond epr1 expr2)
-    struct if_caluse {
+    struct if_caluse_t {
         unique_ptr<Expr> condition, expr1, expr2;
     };
 
     // id
-    struct id_expr {
+    struct id_expr_t {
         string name;
     };
 
     // true|false
-    struct bool_expr {
+    struct bool_expr_t {
         bool val;
     };
 
     // interger
-    struct int_expr {
+    struct int_expr_t {
         int val;
     };
 
     // (expr1 expr2 ... exprn)
-    struct apply_expr {
+    struct apply_expr_t {
         vector<unique_ptr<Expr>> list;
     };
 
     // (define (func x1...xn) expr)|(define id expr)
-    struct define_func {
-        vector<id_expr>  arglist;
+    struct define_func_t {
+        vector<id_expr_t>  arglist;
         unique_ptr<Expr> body;
     };
 
-    struct define_val{
+    struct define_val_t{
         string name;
         unique_ptr<Expr> body;
     };
 
     // (+|-|*|/ expr1 expr2 ... exprn)
-    struct arith_expr {
+    struct arith_expr_t {
         enum op_type {
             plus,
             minus,
@@ -64,13 +64,13 @@ public:
     };
 
     // (define expr)
-    struct define_with_expr{
+    struct define_with_expr_t{
         unique_ptr<Expr> def_part;
         unique_ptr<Expr> expr;
     };
 
     // (= < > <= >= expr1 expr2)
-    struct binary_relation{
+    struct binary_relation_t{
         enum rel_type{
             eq,
             le,
@@ -103,11 +103,11 @@ public:
     };
 
     //将op_type的定义提到Expr里
-    using op_type=arith_expr::op_type;
+    using op_type=arith_expr_t::op_type;
     using variant_t=variant<
-            if_caluse, id_expr,
-            bool_expr, int_expr, apply_expr, define_func, arith_expr,define_with_expr,binary_relation,define_val>;
-    using rel_type=binary_relation::rel_type ;
+            if_caluse_t, id_expr_t,
+            bool_expr_t, int_expr_t, apply_expr_t, define_func_t, arith_expr_t,define_with_expr_t,binary_relation_t,define_val_t>;
+    using rel_type=binary_relation_t::rel_type ;
     //获得该节点的类型
     expr_type getTag() const;
 
@@ -140,7 +140,7 @@ public:
 
     static unique_ptr<Expr> ApplyExpr(vector<unique_ptr<Expr>>);
 
-    static unique_ptr<Expr> DefExpr(vector<id_expr>, unique_ptr<Expr>);
+    static unique_ptr<Expr> DefExpr(vector<id_expr_t>, unique_ptr<Expr>);
 
     static unique_ptr<Expr> PlusExpr(vector<unique_ptr<Expr>>);
 
@@ -175,7 +175,7 @@ private:
     Expr(expr_type, const string &,unique_ptr<Expr>); //ID表达式
     Expr(expr_type, vector<unique_ptr<Expr>>);  //函数调用
     Expr(expr_type, unique_ptr<Expr>, unique_ptr<Expr>);    //关系表达式
-    Expr(expr_type, vector<id_expr>, unique_ptr<Expr>);     // DEFINE表达式
+    Expr(expr_type, vector<id_expr_t>, unique_ptr<Expr>);     // DEFINE表达式
     Expr(expr_type, unique_ptr<Expr>, unique_ptr<Expr>, unique_ptr<Expr>); //if表达式
 };
 

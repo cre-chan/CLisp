@@ -82,17 +82,17 @@ unique_ptr<Expr> reduce_def(vector<variant<unique_ptr<Expr>, Token>> &tempStack,
 
     if (arglist->getTag() == Expr::id) {
         auto expr_body = yield_expr_from(tempStack, in);
-        auto variable_name = move(get<Expr::id_expr>(*(*arglist)));
+        auto variable_name = move(get<Expr::id_expr_t>(*(*arglist)));
         return Expr::DefValExpr(variable_name.name, move(expr_body));
     } else if (arglist->getTag() == Expr::apply) {
-        vector<unique_ptr<Expr>> arguments = move(get<Expr::apply_expr>(*(*arglist)).list);
-        vector<Expr::id_expr> arg_names;
+        vector<unique_ptr<Expr>> arguments = move(get<Expr::apply_expr_t>(*(*arglist)).list);
+        vector<Expr::id_expr_t> arg_names;
         auto expr_body = yield_expr_from(tempStack, in);
         for (auto &id:arguments) {
             //将ID表达式移出
             if (id->getTag()!=Expr::id)
                 throw ExpectingIdOrArglist(in);
-            Expr::id_expr variable_name = move(get<Expr::id_expr>(*(*id)));
+            Expr::id_expr_t variable_name = move(get<Expr::id_expr_t>(*(*id)));
             arg_names.push_back(variable_name);
         }
         arguments.clear();

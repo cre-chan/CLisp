@@ -22,7 +22,7 @@ Expr::expr_type Expr::getTag() const {
         case 5:
             return def_func;
         case 6:
-            switch (std::get<arith_expr>(content).tag) {
+            switch (std::get<arith_expr_t>(content).tag) {
                 case op_type::times:
                     return times;
                 case op_type::plus:
@@ -35,16 +35,16 @@ Expr::expr_type Expr::getTag() const {
         case 7:
             return def_with_expr;
         case 8:
-            switch (std::get<binary_relation>(content).tag) {
-                case binary_relation::rel_type::eq:
+            switch (std::get<binary_relation_t>(content).tag) {
+                case binary_relation_t::rel_type::eq:
                     return eq;
-                case binary_relation::rel_type::le:
+                case binary_relation_t::rel_type::le:
                     return le;
-                case binary_relation::rel_type::lt:
+                case binary_relation_t::rel_type::lt:
                     return lt;
-                case binary_relation::rel_type::ge:
+                case binary_relation_t::rel_type::ge:
                     return ge;
-                case binary_relation::rel_type::gt:
+                case binary_relation_t::rel_type::gt:
                     return gt;
             }
         case 9:
@@ -55,28 +55,28 @@ Expr::expr_type Expr::getTag() const {
 }
 
 
-Expr::Expr(Expr::expr_type t, bool val) : content(bool_expr{val}) {}
+Expr::Expr(Expr::expr_type t, bool val) : content(bool_expr_t{val}) {}
 
-Expr::Expr(Expr::expr_type t, int val) : content(int_expr{val}) {}
+Expr::Expr(Expr::expr_type t, int val) : content(int_expr_t{val}) {}
 
-Expr::Expr(Expr::expr_type t, const string &s) : content(id_expr{s}) {}
+Expr::Expr(Expr::expr_type t, const string &s) : content(id_expr_t{s}) {}
 
 Expr::Expr(Expr::expr_type t, vector<unique_ptr<Expr>> list) {
     switch (t) {
         case apply:
-            content = apply_expr{std::move(list)};
+            content = apply_expr_t{std::move(list)};
             break;
         case plus:
-            content = variant_t(arith_expr{arith_expr::op_type::plus, std::move(list)});
+            content = variant_t(arith_expr_t{arith_expr_t::op_type::plus, std::move(list)});
             break;
         case minus:
-            content = arith_expr{arith_expr::op_type::minus, std::move(list)};
+            content = arith_expr_t{arith_expr_t::op_type::minus, std::move(list)};
             break;
         case times:
-            content = arith_expr{arith_expr::op_type::times, std::move(list)};
+            content = arith_expr_t{arith_expr_t::op_type::times, std::move(list)};
             break;
         case div:
-            content = arith_expr{arith_expr::op_type::div, std::move(list)};
+            content = arith_expr_t{arith_expr_t::op_type::div, std::move(list)};
             break;
         default:
             throw exception();//以防万一
@@ -87,46 +87,46 @@ Expr::Expr(Expr::expr_type t, vector<unique_ptr<Expr>> list) {
 Expr::Expr(Expr::expr_type t, unique_ptr<Expr> expr1, unique_ptr<Expr> expr2) {
     switch (t) {
         case eq:
-            content.emplace<binary_relation>(
-                    binary_relation{binary_relation::rel_type::eq, std::move(expr1), std::move(expr2)});
+            content.emplace<binary_relation_t>(
+                    binary_relation_t{binary_relation_t::rel_type::eq, std::move(expr1), std::move(expr2)});
             break;
         case le:
-            content.emplace<binary_relation>(
-                    binary_relation{binary_relation::rel_type::le, std::move(expr1), std::move(expr2)});
+            content.emplace<binary_relation_t>(
+                    binary_relation_t{binary_relation_t::rel_type::le, std::move(expr1), std::move(expr2)});
             break;
         case lt:
-            content.emplace<binary_relation>(
-                    binary_relation{binary_relation::rel_type::lt, std::move(expr1), std::move(expr2)});
+            content.emplace<binary_relation_t>(
+                    binary_relation_t{binary_relation_t::rel_type::lt, std::move(expr1), std::move(expr2)});
             break;
         case ge:
-            content.emplace<binary_relation>(
-                    binary_relation{binary_relation::rel_type::ge, std::move(expr1), std::move(expr2)});
+            content.emplace<binary_relation_t>(
+                    binary_relation_t{binary_relation_t::rel_type::ge, std::move(expr1), std::move(expr2)});
             break;
         case gt:
-            content.emplace<binary_relation>(
-                    binary_relation{binary_relation::rel_type::gt, std::move(expr1), std::move(expr2)});
+            content.emplace<binary_relation_t>(
+                    binary_relation_t{binary_relation_t::rel_type::gt, std::move(expr1), std::move(expr2)});
             break;
         case def_with_expr:
-            content.emplace<define_with_expr>(define_with_expr{std::move(expr1), std::move(expr2)});
+            content.emplace<define_with_expr_t>(define_with_expr_t{std::move(expr1), std::move(expr2)});
             break;
         default:
             throw exception();
     }
 }
 
-Expr::Expr(Expr::expr_type t, vector<Expr::id_expr> arglist, unique_ptr<Expr> body) :
-        content(define_func{std::move(arglist), std::move(body)}) {}
+Expr::Expr(Expr::expr_type t, vector<Expr::id_expr_t> arglist, unique_ptr<Expr> body) :
+        content(define_func_t{std::move(arglist), std::move(body)}) {}
 
 Expr::Expr(Expr::expr_type t, unique_ptr<Expr> expr1, unique_ptr<Expr> expr2, unique_ptr<Expr> expr3) :
-        content(if_caluse{std::move(expr1), std::move(expr2), std::move(expr3)}) {}
+        content(if_caluse_t{std::move(expr1), std::move(expr2), std::move(expr3)}) {}
 
 //Expr::Expr(Expr::expr_type t, unique_ptr<Expr> definePart, unique_ptr<Expr> expr) :
-//        content(define_with_expr{std::move(definePart), std::move(expr)}) {
+//        content(define_with_expr_t{std::move(definePart), std::move(expr)}) {
 //
 //}
 
 Expr::Expr(Expr::expr_type t, const string &s, unique_ptr<Expr> body):
-        content(define_val{s,std::move(body)})
+        content(define_val_t{s,std::move(body)})
 {
 
 }
@@ -201,7 +201,7 @@ unique_ptr<Expr> Expr::ApplyExpr(vector<unique_ptr<Expr>> list) {
     return unique_ptr<Expr>(new Expr(apply, std::move(list)));
 }
 
-unique_ptr<Expr> Expr::DefExpr(vector<id_expr> arglist, unique_ptr<Expr> body) {
+unique_ptr<Expr> Expr::DefExpr(vector<id_expr_t> arglist, unique_ptr<Expr> body) {
     return unique_ptr<Expr>(new Expr(def_func, std::move(arglist), std::move(body)));
 }
 
@@ -236,7 +236,7 @@ ostream &operator<<(ostream &out, const Expr &self) {
 
 
 ostream &Expr::relaional_output(ostream &out, uint level, const string &op_name) const {
-    auto &minus = std::get<Expr::binary_relation>(content);
+    auto &minus = std::get<Expr::binary_relation_t>(content);
     indentation(out, level) << op_name << '(' << endl;
     minus.expr1->prettyPrint(out, level + 1) << endl;
     minus.expr2->prettyPrint(out, level + 1) << endl;
@@ -270,7 +270,7 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
 
     switch (self.getTag()) {
         case Expr::cond: {
-            auto &cond = std::get<Expr::if_caluse>(self.content);
+            auto &cond = std::get<Expr::if_caluse_t>(self.content);
             indentation(out, level) << "if(" << endl;
             cond.condition->prettyPrint(out, level + 1) << endl;
             cond.expr1->prettyPrint(out, level + 1) << endl;
@@ -279,14 +279,14 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             return out;
         }
         case Expr::boolean:
-            return primary_output<Expr::bool_expr>(out, level, "boolean",
+            return primary_output<Expr::bool_expr_t>(out, level, "boolean",
                                                    [](auto b) { return (b.val ? "true" : "false"); });
         case Expr::id:
-            return primary_output<Expr::id_expr>(out, level, "id", [](auto id) { return id.name; });
+            return primary_output<Expr::id_expr_t>(out, level, "id", [](auto id) { return id.name; });
         case Expr::interger:
-            return primary_output<Expr::int_expr>(out, level, "int", [](auto i) { return to_string(i.val); });
+            return primary_output<Expr::int_expr_t>(out, level, "int", [](auto i) { return to_string(i.val); });
         case Expr::apply: {
-            auto &apply = std::get<Expr::apply_expr>(self.content);
+            auto &apply = std::get<Expr::apply_expr_t>(self.content);
             indentation(out, level) << "apply(" << endl;
             for (auto &item:apply.list)
                 item->prettyPrint(out, level + 1) << endl;
@@ -294,7 +294,7 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             return out;
         }
         case Expr::def_func: {
-            auto &def = std::get<Expr::define_func>(self.content);
+            auto &def = std::get<Expr::define_func_t>(self.content);
             indentation(out, level) << "define(";
             out << '(';
             for (auto &item:def.arglist)
@@ -305,7 +305,7 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             return out;
         }
         case Expr::plus: {
-            auto &plus = std::get<Expr::arith_expr>(self.content);
+            auto &plus = std::get<Expr::arith_expr_t>(self.content);
             indentation(out, level) << "plus(" << endl;
             for (auto &item:plus.operlist)
                 item->prettyPrint(out, level + 1) << endl;
@@ -313,7 +313,7 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             return out;
         }
         case Expr::minus: {
-            auto &minus = std::get<Expr::arith_expr>(self.content);
+            auto &minus = std::get<Expr::arith_expr_t>(self.content);
             indentation(out, level) << "minus(" << endl;
             for (auto &item:minus.operlist)
                 item->prettyPrint(out, level + 1) << endl;
@@ -321,7 +321,7 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             return out;
         }
         case Expr::times: {
-            auto &times = std::get<Expr::arith_expr>(self.content);
+            auto &times = std::get<Expr::arith_expr_t>(self.content);
             indentation(out, level) << "times(" << endl;
             for (auto &item:times.operlist)
                 item->prettyPrint(out, level + 1) << endl;
@@ -329,7 +329,7 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             return out;
         }
         case Expr::div: {
-            auto &div = std::get<Expr::arith_expr>(self.content);
+            auto &div = std::get<Expr::arith_expr_t>(self.content);
             indentation(out, level) << "divide(" << endl;
             for (auto &item:div.operlist)
                 item->prettyPrint(out, level + 1) << endl;
@@ -337,7 +337,7 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
             return out;
         }
         case Expr::def_with_expr: {
-            auto &def_with = std::get<Expr::define_with_expr>(self.content);
+            auto &def_with = std::get<Expr::define_with_expr_t>(self.content);
             indentation(out, level) << "(" << endl;
             def_with.def_part->prettyPrint(out,level+1)<<" in"<<endl;
             def_with.expr->prettyPrint(out, level + 1) << endl;
@@ -355,7 +355,7 @@ ostream &Expr::prettyPrint(ostream &out, uint level) const {
         case gt:
             return relaional_output(out, level, "gt");
         case def_variable:{
-            auto &def_var=std::get<Expr::define_val>(self.content);
+            auto &def_var=std::get<Expr::define_val_t>(self.content);
             indentation(out, level) << "define(" << endl;
             indentation(out, level + 1) << def_var.name<<endl;
             def_var.body->prettyPrint(out,level+1)<<endl;

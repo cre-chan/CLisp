@@ -5,6 +5,8 @@
 #ifndef SYMANTICS_SYMANTICS_H
 #define SYMANTICS_SYMANTICS_H
 
+#include <ostream>
+
 /*
  * 语法分析阶段进行一定程度的类型检查
  * 在全局符号表增加函数符号，并使其对应与抽象语法树
@@ -15,6 +17,8 @@
 struct FuncSignature {
     string global_name;
     std::forward_list<string> argnames;
+
+    friend ostream &operator<<(ostream &os, const FuncSignature &signature);
 };
 
 using ExprModified=Expr;

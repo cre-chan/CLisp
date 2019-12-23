@@ -12,16 +12,15 @@
 
 
 int main() {
-
-
     auto prelude = SymbolTable<FuncSignature>::NIL();
-    auto global_names = SymbolTable<string>::NIL();
 
     unique_ptr<Expr> expr;
 
     while (cin>>expr) {
 
         auto[expr1, name_map, definitions]=symantic_check(std::move(expr), prelude, "");
+
+        prelude=prelude+name_map;
 
         if (expr1)
             cout << *expr1 << endl;
@@ -30,6 +29,8 @@ int main() {
             cout << def.first << ':' << endl;
             cout << *def.second << endl;
         }
+
+        cout<<*prelude<<endl;
     }
 
     return 0;

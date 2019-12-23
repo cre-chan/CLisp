@@ -13,7 +13,7 @@ ResultType
 check_relation(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &env,
                const std::function<unique_ptr<Expr>(unique_ptr<Expr>, unique_ptr<Expr>)> &retType,
                const string &name_modifier) {
-    auto &[t, op1, op2] =std::get<Expr::binary_relation>(*(*expr));
+    auto &[t, op1, op2] =std::get<Expr::binary_relation_t>(*(*expr));
     //不拓展模块，故修饰名不变
     auto[expr1, a, expr1_symbols]=symantic_check(std::move(op1), env, name_modifier);
     auto[expr2, b, expr2_symbols]=symantic_check(std::move(op2), env, name_modifier);
@@ -27,7 +27,7 @@ check_relation(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature
 
 ResultType
 check_cond(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &env, const string &name_modifier) {
-    auto &[condition, op1, op2] = std::get<Expr::if_caluse>(*(*expr));
+    auto &[condition, op1, op2] = std::get<Expr::if_caluse_t>(*(*expr));
     auto[predicate, a, pred_symbols] = symantic_check(std::move(condition), env, name_modifier);
     auto[expr1, b, expr1_symbols] = symantic_check(std::move(op1), env, name_modifier);
     auto[expr2, c, expr2_symbols] = symantic_check(std::move(op2), env, name_modifier);
@@ -41,7 +41,7 @@ check_cond(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &
 
 ResultType
 check_def(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &env, const string &name_modifier) {
-    auto[arglist, body]=std::move(std::get<Expr::define_func>(*(*expr)));
+    auto[arglist, body]=std::move(std::get<Expr::define_func_t>(*(*expr)));
 
     auto func_decl_head = std::make_move_iterator(arglist.begin());
     auto fun_decl_tail = std::make_move_iterator(arglist.end());
@@ -74,7 +74,7 @@ ResultType
 check_arith(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &env, const string &name_modifier,
             const std::function<unique_ptr<Expr>(vector<unique_ptr<Expr>>)> &arith_type) {
 
-    auto[t, arglist]=std::move(std::get<Expr::arith_expr>(*(*expr)));
+    auto[t, arglist]=std::move(std::get<Expr::arith_expr_t>(*(*expr)));
     auto symbol_table = FuncDefs();
 
     for (auto &item:arglist) {
@@ -90,7 +90,7 @@ ResultType
 check_id(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &env, ScopeModifier name_modifier) {
     try {
         //确认当前id是否为某函数的名字，如果是，此处引用应使用mangle后的名字
-        auto &[id_name]=std::get<Expr::id_expr>(*(*expr));
+        auto &[id_name]=std::get<Expr::id_expr_t>(*(*expr));
         return ResultType(Expr::IdExpr(env->find(id_name)->global_name), env, FuncDefs());
     } catch (runtime_error &) {
         //如果没有找到该变量，则视其为全局符号，在调用时确认该符号是否在全局环境里
@@ -103,7 +103,7 @@ ResultType
 check_apply(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &env, ScopeModifier name_modifier) {
 
     //将参数列表移出来
-    auto[arglist]=std::move(std::get<Expr::apply_expr>(*(*expr)));
+    auto[arglist]=std::move(std::get<Expr::apply_expr_t>(*(*expr)));
     auto symbol_table = FuncDefs();
     auto count = 0;
     for (auto &item:arglist) {
@@ -119,7 +119,7 @@ check_apply(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> 
 
 ResultType
 check_var_def(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &env, const string &name_modifier) {
-    auto[var_name, value]=std::move(std::get<Expr::define_val>(*(*expr)));
+    auto[var_name, value]=std::move(std::get<Expr::define_val_t>(*(*expr)));
 
     auto[expr_after_modify, new_env, tbl]=symantic_check(std::move(value), env, name_modifier);
 
@@ -129,7 +129,7 @@ check_var_def(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>
 ResultType
 check_def_with_expr(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &env,
                     const string &name_modifier) {
-    auto[def_part, expr1]=std::move(std::get<Expr::define_with_expr>(*(*expr)));
+    auto[def_part, expr1]=std::move(std::get<Expr::define_with_expr_t>(*(*expr)));
 
     //检查该定义语句，产生新的环境以及全局符号表,同时开启一个新的
     auto[obsolete1, new_env, new_symbols]=symantic_check(std::move(def_part), env, name_modifier + '@');
@@ -182,4 +182,11 @@ symantic_check(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature
         case Expr::def_variable:
             return check_var_def(std::move(expr), env, name_modifier);
     }
+}
+
+ostream &operator<<(ostream &os, const FuncSignature &signature) {
+    os << "global_name: " << signature.global_name << " argnames: ";
+    for (auto &i:signature.argnames)
+        os<<i<<' ';
+    return os;
 }
