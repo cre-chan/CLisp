@@ -27,7 +27,7 @@ int main() {
 
         for (const auto &def:definitions) {
             cout << def.first << ':' << endl;
-            cout << *def.second << endl;
+//            cout << *def.second << endl;
         }
 
         cout<<*prelude<<endl;
