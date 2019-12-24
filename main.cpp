@@ -36,7 +36,7 @@ int main(){
         //进行语义分析，并更新语义分析上下文
         auto [result_expr,func_sigs,defs]=symantic_check(std::move(expr),prelude,"");
 
-        cout<<*defs<<endl;
+//        cout<<*defs<<endl;
 
         prelude=prelude+func_sigs;
 
