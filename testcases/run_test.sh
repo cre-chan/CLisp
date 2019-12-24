@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-parser=./cmake-build-debug/Parser
+parser=./cmake-build-debug/CLisp
 
 expect_error="--expect-error(s)"
 

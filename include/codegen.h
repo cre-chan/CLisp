@@ -26,7 +26,7 @@ struct Operator{
         ge,
         eq,
         bind,
-        call
+        identity
     }opcode;
     string name;
 

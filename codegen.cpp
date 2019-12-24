@@ -138,9 +138,12 @@ Commands code_gen(unique_ptr<Expr> inputExpr) {
         case Expr::def_with_expr:{
             auto[def_part,expr]=move(get<Expr::define_with_expr_t>(**inputExpr));
 
+
             merge(ret,code_gen(move(def_part)));
 
             merge(ret,code_gen(move(expr)));
+
+            ret.emplace_back(Operator{Operator::identity, "identity"});
 
             break;
         }

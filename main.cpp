@@ -29,12 +29,18 @@ void print_exec(const Commands& executable){
 int main(){
     auto prelude=SymbolTable<FuncSignature>::NIL();
     auto runtimeSymbols=SymbolTableRT::NIL();
+
     unique_ptr<Expr> expr;
 
     while(cout<<">>>",cin>>expr){
         //进行语义分析，并更新语义分析上下文
         auto [result_expr,func_sigs,defs]=symantic_check(std::move(expr),prelude,"");
+
+        cout<<*defs<<endl;
+
         prelude=prelude+func_sigs;
+
+
 
         //将函数定义与函数签名合并
         runtimeSymbols=runtimeSymbols+merge_sig_with_exec(func_sigs,code_gen(move(defs)));
@@ -45,25 +51,31 @@ int main(){
 
             auto executable = code_gen(std::move(result_expr));
 
-            print_exec(executable);
+//            print_exec(executable);
 
 
             //生成可执行的队列,并使用当前的运行上下文执行该表达式
             auto run_expr=CodeText(executable);
-            auto result=evaluate(runtimeSymbols,run_expr);
-
-
-
-            switch (result.index()){
-                case 1:
-                    cout<<get<int>(result)<<endl;
-                    break;
-                case 2:
-                    cout<<(get<bool >(result)?"true":"false")<<endl;
-                    break;
-                case 0:
-                    cout<<"<Function object>"<<endl;
+            try {
+                auto result = evaluate(runtimeSymbols, run_expr);
+                switch (result.index()){
+                    case 1:
+                        cout<<get<int>(result)<<endl;
+                        break;
+                    case 2:
+                        cout<<(get<bool >(result)?"true":"false")<<endl;
+                        break;
+                    case 0:
+                        cout<<"<Function object>"<<endl;
+                }
+            }catch(shared_ptr<SymbolTableRT>& modification){
+                runtimeSymbols=modification;
+                continue;
             }
+
+
+
+
         }
 
     }

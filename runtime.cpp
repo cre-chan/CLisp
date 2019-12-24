@@ -12,18 +12,18 @@
 using ValTerm=variant<Function, int, bool>;
 using NumOfTerms=int;
 
-void skip_expr(CodeText &code){
-    int count=0;//括号的差
+void skip_expr(CodeText &code) {
+    int count = 0;//括号的差
 
-    do{
-        if (code.front().index()==0&&get<Operator>(code.front()).opcode==Operator::lbr)
+    do {
+        if (code.front().index() == 0 && get<Operator>(code.front()).opcode == Operator::lbr)
             count++;
 
-        if (code.front().index()==0&&get<Operator>(code.front()).opcode==Operator::rbr)
+        if (code.front().index() == 0 && get<Operator>(code.front()).opcode == Operator::rbr)
             count--;
 
         code.increment();
-    }while(count!=0);
+    } while (count != 0);
 }
 
 variant<Function, int, bool> evaluate(const shared_ptr<SymbolTableRT> &env, CodeText &code) {
@@ -51,8 +51,15 @@ variant<Function, int, bool> evaluate(const shared_ptr<SymbolTableRT> &env, Code
         code.increment();
         //取出所有运算数直到遇到运算符,每次循环开始时ind都是下一个term在的位置
         //此处的move是为了过类型检查，并不会有内存上的影响
+
+        auto myenv=env;
         do {
-            ops.push_back(evaluate(env, code));
+            //尝试对各项进行求值，若抛出异常，则更新求值环境
+            try {
+                ops.push_back(evaluate(myenv, code));
+            }catch(shared_ptr<SymbolTableRT>& tbl){
+                myenv=tbl;
+            }
         } while (code.front().index() == 1 || get<Operator>(code.front()).opcode == Operator::lbr);
 
         //先执行计算，因为在左括号之后不可能紧跟一个运算符，因此进行计算是安全的
@@ -117,16 +124,16 @@ variant<Function, int, bool> evaluate(const shared_ptr<SymbolTableRT> &env, Code
                 auto exec_proc = CodeText{func.executable};
                 return evaluate(subenv, exec_proc);
             }
-            case Operator::branch:{
-                bool cond=get<bool>(ops.front());
+            case Operator::branch: {
+                bool cond = get<bool>(ops.front());
 
-                if (!cond){
+                if (!cond) {
                     skip_expr(code);
-                    auto ret=evaluate(env,code);
+                    auto ret = evaluate(env, code);
                     code.increment();
                     return ret;
-                }else{
-                    auto ret=evaluate(env,code);
+                } else {
+                    auto ret = evaluate(env, code);
                     skip_expr(code);
                     code.increment();
                     return ret;
@@ -167,10 +174,15 @@ variant<Function, int, bool> evaluate(const shared_ptr<SymbolTableRT> &env, Code
                 code.increment();
                 return expr1 == expr2;
             }
-            case Operator::bind:
-                break;
-//            case Operator::call:
-//                break;
+            case Operator::bind: {
+                //跳过下一个括号并抛出修改过的上下文
+                code.increment();
+                throw env->insert(op.name, make_shared<ValTerm>(ops.front()));
+
+            }
+            case Operator::identity:
+                code.increment();
+                return ops.front();
 //          此分支被删除
         }
 

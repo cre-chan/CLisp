@@ -26,4 +26,8 @@ variant<Function,int,bool> evaluate(const shared_ptr<SymbolTableRT>&,CodeText& c
 
 shared_ptr<SymbolTableRT> merge_sig_with_exec(shared_ptr<SymbolTable<FuncSignature>> sigs,FuncDefsLow);
 
+struct ContextModification{
+    shared_ptr<SymbolTableRT > val;
+};
+
 #endif //CLISP_RUNTIME_H
