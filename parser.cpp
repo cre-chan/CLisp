@@ -41,8 +41,11 @@ unique_ptr<Expr> reduce_binary(vector<variant<unique_ptr<Expr>, Token>> tempStac
     if (tempStack.size() != 2)
         throw ExpectingOperands(in, tempStack.size());
 
+    auto op1=yield_expr_from(tempStack, in);
+    auto op2=yield_expr_from(tempStack, in);
+
     //依赖于求值顺序
-    return retType(yield_expr_from(tempStack, in), yield_expr_from(tempStack, in));
+    return retType(move(op1), move(op2));
 }
 
 unique_ptr<Expr>

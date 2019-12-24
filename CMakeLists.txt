@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(CLisp)
+
 set(CMAKE_CXX_STANDARD 17)
-include_directories(CLisp include)
-add_executable(CLisp main.cpp lexer.cpp syntax.cpp parser.cpp include/SymbolTable.hpp clisp_execption.cpp)
 
 
 # 调试词法解析器用项目
@@ -34,3 +32,9 @@ add_executable(Semantics symantics.cpp debug_repl/Semantics_debug.cpp syntax.cpp
 project(Codegen)
 include_directories(Codegen include)
 add_executable(Codegen debug_repl/codegen_debug.cpp lexer.cpp parser.cpp syntax.cpp clisp_execption.cpp symantics.cpp codegen.cpp)
+
+
+#求值环境
+project(CLisp)
+include_directories(CLisp include)
+add_executable(CLisp main.cpp lexer.cpp syntax.cpp parser.cpp clisp_execption.cpp symantics.cpp codegen.cpp runtime.cpp include/runtime.h)

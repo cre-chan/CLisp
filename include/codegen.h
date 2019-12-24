@@ -36,7 +36,6 @@ struct Operator{
 
 struct Value{
     friend ostream &operator<<(ostream &os, const Value &value);
-
     bool callable;
     variant<monostate,bool,int,variable_name> val;
 };
@@ -44,6 +43,8 @@ struct Value{
 using Term=variant<Operator,Value>;
 using Commands=vector<Term>;
 using FuncDefsLow=forward_list<pair<GlobalName ,Commands >>;
+
+
 
 Commands code_gen(unique_ptr<Expr>);
 FuncDefsLow code_gen(FuncDefs);
