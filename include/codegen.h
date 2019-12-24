@@ -42,7 +42,7 @@ struct Value{
 
 using Term=variant<Operator,Value>;
 using Commands=vector<Term>;
-using FuncDefsLow=forward_list<pair<GlobalName ,Commands >>;
+using FuncDefsLow=forward_list<pair<GlobalName ,pair<forward_list<string>,Commands> >>;
 
 
 

@@ -43,7 +43,7 @@ int main(){
 
 
         //将函数定义与函数签名合并
-        runtimeSymbols=runtimeSymbols+merge_sig_with_exec(func_sigs,code_gen(move(defs)));
+        runtimeSymbols=runtimeSymbols+ sig_to_runtime(code_gen(move(defs)));
 
         if (result_expr) {
             //如果当前表达式可执行，则尝试执行

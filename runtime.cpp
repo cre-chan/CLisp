@@ -190,12 +190,14 @@ variant<Function, int, bool> evaluate(const shared_ptr<SymbolTableRT> &env, Code
 
 }
 
-shared_ptr<SymbolTableRT> merge_sig_with_exec(shared_ptr<SymbolTable<FuncSignature>> sigs, FuncDefsLow defs) {
+shared_ptr<SymbolTableRT> sig_to_runtime(FuncDefsLow defs) {
     auto ret = SymbolTableRT::NIL();
 
-    for (auto &[name, exec]:defs) {
+    for (auto &[name, sig]:defs) {
+        auto &[args,exec]=sig;
+
         vector<string> arglist;
-        for (auto arg:move(sigs->find(name)->argnames))
+        for (auto arg:args)
             arglist.push_back(move(arg));
 
         //往ret里插入函数定义

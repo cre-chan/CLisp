@@ -45,7 +45,7 @@ int main(){
 
         for(auto &[name,code]:code_gen(move(defs))){
             cout<<name<<':'<<endl;
-            print_exec(code);
+            print_exec(code.second);
         }
     }
 

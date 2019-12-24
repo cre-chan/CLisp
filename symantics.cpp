@@ -41,28 +41,36 @@ check_cond(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &
 
 ResultType
 check_def(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature>> &env, const string &name_modifier) {
+    //获取当前函数的参数列表与函数体
     auto[arglist, body]=std::move(std::get<Expr::define_func_t>(*(*expr)));
 
-    auto func_decl_head = std::make_move_iterator(arglist.begin());
-    auto fun_decl_tail = std::make_move_iterator(arglist.end());
+    auto func_decl_head = arglist.begin();
+    auto fun_decl_tail = arglist.end();
 
-    auto[local_name]=std::move(*(func_decl_head++));
+    //取出函数名,并复制
+    auto &[local_name]=*(func_decl_head++);
     auto global_name = name_modifier + local_name;
 
     std::forward_list<string> arg_names;
 
     for (auto cur = arg_names.before_begin(); func_decl_head != fun_decl_tail; func_decl_head++, cur++) {
         auto[arg_name]=*func_decl_head;
-        arg_names.insert_after(cur, std::move(arg_name));
+        arg_names.insert_after(cur, arg_name);
     }
 
-    //将局部名字到全局函数签名的映射加入环境
+    //将局部名字到全局名字的映射加入环境
     auto func_env = env->insert(local_name, std::make_shared<FuncSignature>(
-            FuncSignature{global_name, std::move(arg_names)}));
+            FuncSignature{global_name}));
 
     auto[expr1, a, fundefs]=symantic_check(std::move(body), func_env, name_modifier + "@" + local_name);
 
-    fundefs.push_front(pair<GlobalName ,unique_ptr<ExprModified >>(global_name,std::move(expr1)));
+
+    fundefs.push_front(pair<GlobalName,
+            pair<forward_list<string>, unique_ptr<ExprModified >>>(global_name,
+                    pair<forward_list<string>, unique_ptr<ExprModified >>(std::move(arg_names), std::move(expr1))
+                    )
+
+    );
 
     //define表达式不产生可执行语句，往自己所处环境里加入自己的名字，并将自身提升至全局符号
     return ResultType(nullptr, func_env,
@@ -185,8 +193,6 @@ symantic_check(unique_ptr<Expr> expr, const shared_ptr<SymbolTable<FuncSignature
 }
 
 ostream &operator<<(ostream &os, const FuncSignature &signature) {
-    os << "global_name: " << signature.global_name << " argnames: ";
-    for (auto &i:signature.argnames)
-        os<<i<<' ';
+    os << "global_name: " << signature.global_name << endl;
     return os;
 }

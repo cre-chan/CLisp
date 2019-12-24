@@ -189,8 +189,13 @@ FuncDefsLow code_gen(FuncDefs defs) {
     FuncDefsLow ret;
 
     for(auto &def:defs){
-        auto [name,defexpr]=move(def);
-        ret.push_front(pair<GlobalName,Commands>(name,code_gen(move(defexpr))));
+        auto [name,sig]=move(def);
+        auto [args,defexpr]=move(sig);
+        ret.push_front(pair<GlobalName,pair<forward_list<string>,Commands>>(
+                name,
+                pair<forward_list<string>,Commands>(move(args),code_gen(move(defexpr)))
+
+                ));
     }
 
     return ret;

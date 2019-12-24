@@ -6,28 +6,29 @@
 #define CLISP_RUNTIME_H
 
 
-struct Function{
+struct Function {
     vector<string> arglist;
     Commands executable;
 };
 
-using SymbolTableRT=SymbolTable<variant<Function,int,bool>>;
+using SymbolTableRT=SymbolTable<variant<Function, int, bool>>;
 
-struct CodeText{
-    Commands ::const_iterator pos;
-    explicit CodeText(const Commands&);
+struct CodeText {
+    Commands::const_iterator pos;
 
-    const Term& front();
+    explicit CodeText(const Commands &);
+
+    const Term &front();
 
     void increment();
 };
 
-variant<Function,int,bool> evaluate(const shared_ptr<SymbolTableRT>&,CodeText& code);
+variant<Function, int, bool> evaluate(const shared_ptr<SymbolTableRT> &, CodeText &code);
 
-shared_ptr<SymbolTableRT> merge_sig_with_exec(shared_ptr<SymbolTable<FuncSignature>> sigs,FuncDefsLow);
+shared_ptr<SymbolTableRT> sig_to_runtime(FuncDefsLow defs);
 
-struct ContextModification{
-    shared_ptr<SymbolTableRT > val;
+struct ContextModification {
+    shared_ptr<SymbolTableRT> val;
 };
 
 #endif //CLISP_RUNTIME_H
