@@ -119,9 +119,13 @@ unique_ptr<Expr> reduce_if(vector<variant<unique_ptr<Expr>, Token>> &tempStack, 
     if (tempStack.size() != 3)
         throw ExpectingOperands(in, 3);
 
-    return Expr::IfExpr(yield_expr_from(tempStack, in),
-                        yield_expr_from(tempStack, in),
-                        yield_expr_from(tempStack, in));
+    auto cond=yield_expr_from(tempStack, in);
+    auto b1=yield_expr_from(tempStack, in);
+    auto b2=yield_expr_from(tempStack, in);
+
+    return Expr::IfExpr(move(cond),
+                        move(b1),
+                        move(b2));
 }
 
 //移出一个括号并继续

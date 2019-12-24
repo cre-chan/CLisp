@@ -12,7 +12,19 @@
 using ValTerm=variant<Function, int, bool>;
 using NumOfTerms=int;
 
-void skip_expr(CodeText &code);
+void skip_expr(CodeText &code){
+    int count=0;//括号的差
+
+    do{
+        if (code.front().index()==0&&get<Operator>(code.front()).opcode==Operator::lbr)
+            count++;
+
+        if (code.front().index()==0&&get<Operator>(code.front()).opcode==Operator::rbr)
+            count--;
+
+        code.increment();
+    }while(count!=0);
+}
 
 variant<Function, int, bool> evaluate(const shared_ptr<SymbolTableRT> &env, CodeText &code) {
     auto &head = code.front();
@@ -45,8 +57,8 @@ variant<Function, int, bool> evaluate(const shared_ptr<SymbolTableRT> &env, Code
 
         //先执行计算，因为在左括号之后不可能紧跟一个运算符，因此进行计算是安全的
 
-        //获得运算符并将pc指向下一个符号，视情况有可能需要再次跳跃
-        auto &op = get<0>(code.front());
+        //获得运算符并将pc指向运算符下一个符号，视情况有可能需要再次跳跃
+        auto &op = get<Operator>(code.front());
         code.increment();
 
 
@@ -105,8 +117,21 @@ variant<Function, int, bool> evaluate(const shared_ptr<SymbolTableRT> &env, Code
                 auto exec_proc = CodeText{func.executable};
                 return evaluate(subenv, exec_proc);
             }
-            case Operator::branch:
-                break;
+            case Operator::branch:{
+                bool cond=get<bool>(ops.front());
+
+                if (!cond){
+                    skip_expr(code);
+                    auto ret=evaluate(env,code);
+                    code.increment();
+                    return ret;
+                }else{
+                    auto ret=evaluate(env,code);
+                    skip_expr(code);
+                    code.increment();
+                    return ret;
+                }
+            }
             case Operator::lt: {
                 int expr1, expr2;
                 expr1 = get<int>(ops[0]);
