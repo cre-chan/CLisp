@@ -8,9 +8,12 @@
 #include "clisp_execption.h"
 
 
+const char Welcome[] = "Welcome to CLisp 0.0.1a.\n"
+                       "This is a private project by cre-chan.\n"
+                       "My github repository is at https://github.com/cre-chan/CLisp\n";
 
 
-void print_exec(const Commands& executable){
+void print_exec(const Commands &executable) {
     for (auto &i:executable) {
         switch (i.index()) {
             case 0:
@@ -26,10 +29,12 @@ void print_exec(const Commands& executable){
 }
 
 
+int main() {
 
-int main(){
-    auto prelude=SymbolTable<FuncSignature>::NIL();
-    auto runtimeSymbols=SymbolTableRT::NIL();
+    cout<<Welcome<<endl;
+
+    auto prelude = SymbolTable<FuncSignature>::NIL();
+    auto runtimeSymbols = SymbolTableRT::NIL();
 
     unique_ptr<Expr> expr;
 
@@ -79,8 +84,8 @@ int main(){
             }
 
         }
-    }catch (NormalExit&){
-
+    } catch (NormalExit &e) {
+        cout<<endl<<endl<<e.what()<<endl;
     }
 
     return 0;
